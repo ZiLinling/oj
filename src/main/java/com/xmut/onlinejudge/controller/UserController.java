@@ -97,14 +97,13 @@ public class UserController {
         User finduser = userService.findByName(user.getUsername());
         if (finduser != null) {
             if (finduser.getPassword().equals(user.getPassword())) {
-                result.success("登录成功");
                 //进行操作
-
+                result.success(user, "登录成功");
             } else {
-                result.fail("密码错误");
+                result.error("密码错误");
             }
         } else {
-            result.fail("用户名不存在");
+            result.error("用户名不存在");
         }
         return result;
     }
@@ -113,12 +112,12 @@ public class UserController {
     public Result<User> register(@RequestBody User user) {
         Result<User> result = new Result<User>();
         if (userService.findByName(user.getUsername()) != null) {
-            result.fail("用户名已存在");
+            result.error("用户名已存在");
         } else {
             user.setAdminType(0);//普通用户
             user.setIsDisabled(false);//未禁用
             userService.add(user);
-            result.success("注册成功");
+            result.success(user, "注册成功");
         }
         return result;
     }
