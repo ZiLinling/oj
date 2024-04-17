@@ -4,8 +4,8 @@ import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Submission;
 import com.xmut.onlinejudge.service.SubmissionService;
-import com.xmut.onlinejudge.utils.DateTool;
-import com.xmut.onlinejudge.utils.JudgeService;
+import com.xmut.onlinejudge.utils.DateUtil;
+import com.xmut.onlinejudge.utils.JudgeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -94,8 +94,8 @@ public class SubmissionController {
     @PostMapping("submit")
     public Result<Submission> submit(@RequestBody Submission submission) {
         Result result = new Result();
-        submission.setCreateTime(DateTool.getCurrTime());
-        JudgeService.judge(submission, null);
+        submission.setCreateTime(DateUtil.getCurrTime());
+        JudgeUtil.judge(submission, null);
 
         return result;
     }

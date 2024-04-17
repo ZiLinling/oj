@@ -25,6 +25,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userMapper.selectOneByCondition(USER.USERNAME.eq(username));
     }
 
+    public Boolean findName(String username) {
+        User user = userMapper.selectOneByCondition(USER.USERNAME.eq(username));
+        return user != null;
+    }
+
+    public Boolean findEmail(String email) {
+        User user = userMapper.selectOneByCondition(USER.EMAIL.eq(email));
+        return user != null;
+    }
+
     public Boolean add(User user) {
         int a = userMapper.insertSelective(user);
         System.out.println(a);

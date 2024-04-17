@@ -22,12 +22,12 @@ import java.security.NoSuchAlgorithmException;
 
 @Component
 
-public class JudgeService {
+public class JudgeUtil {
 
     private static String token = "TOKEN";
     private String serverBaseUrl;
 
-    JudgeService() {
+    JudgeUtil() {
         System.setProperty("http.proxySet", "true");
         System.setProperty("http.proxyHost", "127.0.0.1");
         System.setProperty("http.proxyPort", "8888");
@@ -106,9 +106,9 @@ public class JudgeService {
     }
 
     public static void main(String[] argc) throws JsonProcessingException {
-        JudgeService judgeService = new JudgeService();
+        JudgeUtil judgeUtil = new JudgeUtil();
         Submission submission = new Submission();
-        judgeService.handleJudgeTask(submission);
+        judgeUtil.handleJudgeTask(submission);
 //        judgeService.ping ("http://192.168.214.134:808/ping");
     }
 

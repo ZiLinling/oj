@@ -7,7 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class DateTool {
+public class DateUtil {
     public final static String SHORTYEAR = "yyyy";
     public final static String SHORTMON = "yyyy-MM";
     public final static String SHORTIME = "yyyy-MM-dd";
@@ -169,8 +169,8 @@ public class DateTool {
     }
 
     public static void main(String[] args) {
-//		System.out.println(DateTool.getFirstDay("2022-02"));
-//		System.out.println(DateTool.getLastDay("2022-02"));
+//		System.out.println(DateUtil.getFirstDay("2022-02"));
+//		System.out.println(DateUtil.getLastDay("2022-02"));
 //		List<String> list = getEveryDay("2022-02");
 //		if(list!=null){
 //			for(String item : list){

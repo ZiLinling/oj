@@ -1,6 +1,7 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.UserProfile;
 import com.xmut.onlinejudge.service.UserProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.List;
  * @since 2024-03-05
  */
 @RestController
-@RequestMapping("/userProfile")
+@RequestMapping("/profile")
 public class UserProfileController {
 
     @Autowired
@@ -65,16 +66,6 @@ public class UserProfileController {
         return userProfileService.list();
     }
 
-    /**
-     * 根据主键获取详细信息。
-     *
-     * @param id 主键
-     * @return 详情
-     */
-    @GetMapping("getInfo/{id}")
-    public UserProfile getInfo(@PathVariable Serializable id) {
-        return userProfileService.getById(id);
-    }
 
     /**
      * 分页查询。
@@ -85,6 +76,18 @@ public class UserProfileController {
     @GetMapping("page")
     public Page<UserProfile> page(Page<UserProfile> page) {
         return userProfileService.page(page);
+    }
+
+    @GetMapping("/getInfo")
+    public Result<UserProfile> getByUsername(String username) {
+        Result<UserProfile> result = new Result<>();
+        UserProfile userProfile = userProfileService.findByName(username);
+        if (userProfile != null) {
+            result.success(userProfile, "获取用户信息成功");
+        } else {
+            result.success(null, "获取用户信息失败");
+        }
+        return result;
     }
 
 }

@@ -13,6 +13,10 @@ public interface UserService extends IService<User> {
 
     User findByName(String username);
 
+    Boolean findName(String username);
+
+    Boolean findEmail(String email);
+
     Boolean add(User user);
 
 }

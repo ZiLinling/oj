@@ -4,7 +4,7 @@ import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.JudgeServer;
 import com.xmut.onlinejudge.service.JudgeServerService;
-import com.xmut.onlinejudge.utils.DateTool;
+import com.xmut.onlinejudge.utils.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +35,8 @@ public class JudgeServerController {
     @PostMapping("add")
     public Result<JudgeServer> save(@RequestBody String url) {
         Result<JudgeServer> result = new Result<>();
-//        JudgeServer judgeServer= JudgeService.ping(url);
-//        judgeServer.setCreateTime(DateTool.getCurrTime());
+//        JudgeServer judgeServer= JudgeUtil.ping(url);
+//        judgeServer.setCreateTime(DateUtil.getCurrTime());
 //        if (judgeServerService.save(judgeServer)) {
 //            result.success("添加成功");
 //            result.setData(judgeServer);
@@ -110,7 +110,7 @@ public class JudgeServerController {
         judgeServer.setMemory(Double.parseDouble(response.get("memory").toString()));
         judgeServer.setCpu(Double.parseDouble(response.get("cpu").toString()));
         judgeServer.setJudgerVersion(response.get("judger_version").toString());
-        judgeServer.setLastHeartbeat(DateTool.getCurrTime());
+        judgeServer.setLastHeartbeat(DateUtil.getCurrTime());
         judgeServerService.updateById(judgeServer);
         return null;
     }

@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 /**
  * 实体类。
@@ -31,13 +30,13 @@ public class User implements Serializable {
 
     private String password;
 
-    private Timestamp lastLogin;
+    private String lastLogin;
 
     private String username;
 
     private String email;
 
-    private Timestamp createTime;
+    private String createTime;
 
     private Integer adminType;
 
