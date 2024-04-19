@@ -11,12 +11,10 @@ import com.xmut.onlinejudge.entity.User;
  */
 public interface UserService extends IService<User> {
 
-    User findByName(String username);
+    User getByUsername(String username);
 
-    Boolean findName(String username);
+    Boolean isUsernameExist(String username);
 
-    Boolean findEmail(String email);
-
-    Boolean add(User user);
+    Boolean isEmailExist(String email);
 
 }

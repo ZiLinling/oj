@@ -77,7 +77,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
         <!--email-->
+
         <!--fastjson-->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -85,6 +90,14 @@
             <version>1.2.47</version>
         </dependency>
         <!--fastjson-->
+
+        <!--auth0-->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <!--auth0-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

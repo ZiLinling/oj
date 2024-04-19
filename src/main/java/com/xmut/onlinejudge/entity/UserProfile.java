@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -28,16 +29,20 @@ public class UserProfile implements Serializable {
     @Id(keyType = KeyType.Auto)
     private Integer id;
 
+    @Column(onInsertValue = "'{}'")
     private String acmProblemsStatus;
 
+    @Column(onInsertValue = "'default.png'")
     private String avatar;
 
     private String blog;
 
     private String mood;
 
+    @Column(onInsertValue = "0")
     private Integer acceptedNumber;
 
+    @Column(onInsertValue = "0")
     private Integer submissionNumber;
 
     private String github;
@@ -48,8 +53,10 @@ public class UserProfile implements Serializable {
 
     private Integer userId;
 
+    @Column(onInsertValue = "0")
     private Long totalScore;
 
+    @Column(onInsertValue = "'{}'")
     private String oiProblemsStatus;
 
     private String realName;

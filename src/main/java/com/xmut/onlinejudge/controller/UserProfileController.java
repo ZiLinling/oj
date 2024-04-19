@@ -1,12 +1,16 @@
 package com.xmut.onlinejudge.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.UserProfile;
 import com.xmut.onlinejudge.service.UserProfileService;
+import com.xmut.onlinejudge.service.UserService;
+import com.xmut.onlinejudge.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.List;
 
@@ -23,6 +27,12 @@ public class UserProfileController {
     @Autowired
     private UserProfileService userProfileService;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private HttpServletRequest request;
+
     /**
      * 添加。
      *
@@ -31,6 +41,9 @@ public class UserProfileController {
      */
     @PostMapping("save")
     public boolean save(@RequestBody UserProfile userProfile) {
+        userProfile.setUserId(1);
+        System.out.println(userProfile);
+        userProfileService.save(userProfile);
         return userProfileService.save(userProfile);
     }
 
@@ -78,12 +91,27 @@ public class UserProfileController {
         return userProfileService.page(page);
     }
 
-    @GetMapping("/getInfo")
-    public Result<UserProfile> getByUsername(String username) {
-        Result<UserProfile> result = new Result<>();
-        UserProfile userProfile = userProfileService.findByName(username);
-        if (userProfile != null) {
-            result.success(userProfile, "获取用户信息成功");
+    @GetMapping("getInfo")
+    public Result<JSONObject> getByToken() {
+        Result<JSONObject> result = new Result<>();
+        Integer userId = JwtUtil.getUserId(request.getHeader("token"));
+        if (userId != null) {
+            UserProfile userProfile = userProfileService.getById(userId);
+            if (userProfile != null) {
+                //将userProfile转为json对象
+                JSONObject data = (JSONObject) JSONObject.toJSON(userProfile);
+                //删除userId
+                data.remove("userId");
+                //将user转为json对象
+                JSONObject user = (JSONObject) JSONObject.toJSON(userService.getById(userId));
+                //删除密码
+                user.remove("password");
+                //存入data
+                data.put("user", user);
+                result.success(data, "获取用户信息成功");
+            } else {
+                result.success(null, "获取用户信息失败");
+            }
         } else {
             result.success(null, "获取用户信息失败");
         }

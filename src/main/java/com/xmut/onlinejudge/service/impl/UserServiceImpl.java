@@ -21,23 +21,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private UserMapper userMapper;
 
-    public User findByName(String username) {
+    public User getByUsername(String username) {
         return userMapper.selectOneByCondition(USER.USERNAME.eq(username));
     }
 
-    public Boolean findName(String username) {
+    public Boolean isUsernameExist(String username) {
         User user = userMapper.selectOneByCondition(USER.USERNAME.eq(username));
         return user != null;
     }
 
-    public Boolean findEmail(String email) {
+    public Boolean isEmailExist(String email) {
         User user = userMapper.selectOneByCondition(USER.EMAIL.eq(email));
         return user != null;
     }
 
-    public Boolean add(User user) {
-        int a = userMapper.insertSelective(user);
-        System.out.println(a);
-        return true;
-    }
 }
