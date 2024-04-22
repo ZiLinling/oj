@@ -15,6 +15,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = tokenExpiredException.class)
     public Result errorHandlertoken(HttpServletRequest request, Exception ex) {
         Result result = new Result();
+        result.error("Token Expired");
         return result;
     }
 }

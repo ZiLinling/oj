@@ -42,7 +42,6 @@ public class UserProfileController {
     @PostMapping("save")
     public boolean save(@RequestBody UserProfile userProfile) {
         userProfile.setUserId(1);
-        System.out.println(userProfile);
         userProfileService.save(userProfile);
         return userProfileService.save(userProfile);
     }
@@ -94,8 +93,9 @@ public class UserProfileController {
     @GetMapping("getInfo")
     public Result<JSONObject> getByToken() {
         Result<JSONObject> result = new Result<>();
-        Integer userId = JwtUtil.getUserId(request.getHeader("token"));
-        if (userId != null) {
+        String token = request.getHeader("token");
+        if (token != null) {
+            Integer userId = JwtUtil.getUserId(token);
             UserProfile userProfile = userProfileService.getById(userId);
             if (userProfile != null) {
                 //将userProfile转为json对象

@@ -1,6 +1,7 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.service.ProblemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,15 +77,14 @@ public class ProblemController {
         return problemService.getById(id);
     }
 
-    /**
-     * 分页查询。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
+
     @GetMapping("page")
-    public Page<Problem> page(Page<Problem> page) {
-        return problemService.page(page);
+    public Result<Page<Problem>> page(Integer limit, Integer page, String keyword, String difficulty, String tag) {
+        Result<Page<Problem>> result = new Result<>();
+        //tag功能未实现
+        Page<Problem> problemPage = problemService.page(page, limit, keyword, difficulty, tag);
+        result.success(problemPage, "查询成功");
+        return result;
     }
 
 }

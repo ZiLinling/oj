@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.service;
 
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import com.xmut.onlinejudge.entity.Problem;
 
@@ -11,4 +12,5 @@ import com.xmut.onlinejudge.entity.Problem;
  */
 public interface ProblemService extends IService<Problem> {
 
+    Page<Problem> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag);
 }
