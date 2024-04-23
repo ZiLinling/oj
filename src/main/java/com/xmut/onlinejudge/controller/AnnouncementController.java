@@ -1,13 +1,13 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Announcement;
 import com.xmut.onlinejudge.service.AnnouncementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 控制层。
@@ -55,15 +55,7 @@ public class AnnouncementController {
         return announcementService.updateById(announcement);
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<Announcement> list() {
-        return announcementService.list();
-    }
+
 
     /**
      * 根据主键获取详细信息。
@@ -82,9 +74,15 @@ public class AnnouncementController {
      * @param page 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    public Page<Announcement> page(Page<Announcement> page) {
-        return announcementService.page(page);
+
+
+    @GetMapping("list")
+    public Result<Page<Announcement>> page(Integer limit, Integer page) {
+        Result<Page<Announcement>> result = new Result<>();
+        Page<Announcement> announcementPage = new Page<>(page, limit);
+        announcementPage = announcementService.page(announcementPage);
+        result.success(announcementPage, "查询成功");
+        return result;
     }
 
 }

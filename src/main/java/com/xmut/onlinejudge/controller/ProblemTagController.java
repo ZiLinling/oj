@@ -1,6 +1,7 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.ProblemTag;
 import com.xmut.onlinejudge.service.ProblemTagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.List;
  * @since 2024-03-05
  */
 @RestController
-@RequestMapping("/problemTag")
+@RequestMapping("/tag")
 public class ProblemTagController {
 
     @Autowired
@@ -61,8 +62,10 @@ public class ProblemTagController {
      * @return 所有数据
      */
     @GetMapping("list")
-    public List<ProblemTag> list() {
-        return problemTagService.list();
+    public Result<List<ProblemTag>> list() {
+        Result<List<ProblemTag>> result = new Result<>();
+        result.success(problemTagService.list(), "查询成功");
+        return result;
     }
 
     /**

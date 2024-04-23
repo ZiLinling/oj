@@ -1,6 +1,7 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.row.Row;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.service.ProblemService;
@@ -8,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 控制层。
@@ -56,15 +56,6 @@ public class ProblemController {
         return problemService.updateById(problem);
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<Problem> list() {
-        return problemService.list();
-    }
 
     /**
      * 根据主键获取详细信息。
@@ -78,11 +69,11 @@ public class ProblemController {
     }
 
 
-    @GetMapping("page")
-    public Result<Page<Problem>> page(Integer limit, Integer page, String keyword, String difficulty, String tag) {
-        Result<Page<Problem>> result = new Result<>();
+    @GetMapping("list")
+    public Result<Page<Row>> page(Integer limit, Integer page, String keyword, String difficulty, String tag) {
+        Result<Page<Row>> result = new Result<>();
         //tag功能未实现
-        Page<Problem> problemPage = problemService.page(page, limit, keyword, difficulty, tag);
+        Page<Row> problemPage = problemService.page(page, limit, keyword, difficulty, tag);
         result.success(problemPage, "查询成功");
         return result;
     }

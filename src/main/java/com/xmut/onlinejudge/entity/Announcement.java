@@ -41,4 +41,8 @@ public class Announcement implements Serializable {
 
     private Integer createdById;
 
+    private Boolean contest;
+
+    private Integer contestId;
+
 }

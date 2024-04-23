@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xmut.onlinejudge.mapper.ProblemMapper">
+
+    <select id="listForUser" resultType="com.mybatisflex.core.row.Row">
+        SELECT problem.*, string_agg(problem_tag.name, ',') AS tags, "user".username AS created_user
+        FROM problem
+        JOIN "user" ON problem.created_by_id = "user".id
+        LEFT JOIN problem_tags ON problem.id = problem_tags.problem_id
+        LEFT JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
+        ${qwSql}
+        <if test="tag != null and tag != ''">
+            AND EXISTS (
+            SELECT 1
+            FROM problem_tags
+            JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
+            WHERE problem_tags.problem_id = problem.id
+            AND problem_tag.name = #{tag}
+            )
+        </if>
+        GROUP BY problem.id, "user".username
+        LIMIT #{pageSize} OFFSET #{pageOffset};
+    </select>
+
+    <select id="listForAdmin" resultType="com.mybatisflex.core.row.Row">
+        SELECT problem.*, string_agg(problem_tag.name, ',') AS tags, "user".username AS created_user
+        FROM problem
+                 JOIN "user" ON problem.created_by_id = "user".id
+                 LEFT JOIN problem_tags ON problem.id = problem_tags.problem_id
+                 LEFT JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
+            ${qwSql}
+        GROUP BY problem.id, "user".username LIMIT #{pageSize}
+        OFFSET #{pageOffset};
+    </select>
+
+    <select id="listForUser_COUNT" resultType="long">
+        SELECT count(*) FROM problem ${qwSql}
+        <if test="tag != null and tag != ''">
+            AND EXISTS (
+            SELECT 1
+            FROM problem_tags
+            JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
+            WHERE problem_tags.problem_id = problem.id
+            AND problem_tag.name = #{tag}
+            )
+        </if>
+        ;
+    </select>
+
+    <select id="listForAdmin_COUNT" resultType="long">
+        SELECT count(*)
+        FROM problem ${qwSql};
+    </select>
+
+
+</mapper>

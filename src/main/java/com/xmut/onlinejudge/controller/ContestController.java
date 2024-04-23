@@ -1,13 +1,14 @@
 package com.xmut.onlinejudge.controller;
 
 import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.row.Row;
+import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Contest;
 import com.xmut.onlinejudge.service.ContestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 控制层。
@@ -55,15 +56,6 @@ public class ContestController {
         return contestService.updateById(contest);
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<Contest> list() {
-        return contestService.list();
-    }
 
     /**
      * 根据主键获取详细信息。
@@ -82,9 +74,11 @@ public class ContestController {
      * @param page 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    public Page<Contest> page(Page<Contest> page) {
-        return contestService.page(page);
+    @GetMapping("list")
+    public Result<Page<Row>> page(Integer page, Integer limit, Integer status) {
+        Result<Page<Row>> result = new Result<>();
+        Page<Row> contestPage = contestService.page(page, limit, status);
+        result.success(contestPage, "查询成功");
+        return result;
     }
-
 }

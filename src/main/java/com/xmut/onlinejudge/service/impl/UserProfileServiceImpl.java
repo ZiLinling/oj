@@ -23,7 +23,9 @@ public class UserProfileServiceImpl extends ServiceImpl<UserProfileMapper, UserP
     @Override
     public UserProfile findByName(String username) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.select(USER_PROFILE.ALL_COLUMNS).from(USER).join(USER_PROFILE).on(USER_PROFILE.USER_ID.eq(USER.ID)).where(USER.USERNAME.eq("username"));
+        queryWrapper.select(USER_PROFILE.ALL_COLUMNS).from(USER).
+                join(USER_PROFILE).on(USER_PROFILE.USER_ID.eq(USER.ID)).
+                where(USER.USERNAME.eq("username"));
         return this.mapper.selectOneByQuery(queryWrapper);
     }
 }

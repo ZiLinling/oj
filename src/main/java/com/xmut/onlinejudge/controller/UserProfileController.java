@@ -90,7 +90,7 @@ public class UserProfileController {
         return userProfileService.page(page);
     }
 
-    @GetMapping("getInfo")
+    @GetMapping("")
     public Result<JSONObject> getByToken() {
         Result<JSONObject> result = new Result<>();
         String token = request.getHeader("token");

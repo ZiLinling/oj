@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 /**
  * 实体类。
@@ -39,18 +38,20 @@ public class Contest implements Serializable {
 
     private String ruleType;
 
-    private Timestamp startTime;
+    private String startTime;
 
-    private Timestamp endTime;
+    private String endTime;
 
-    private Timestamp createTime;
+    private String createTime;
 
-    private Timestamp lastUpdateTime;
+    private String lastUpdateTime;
 
     private Boolean visible;
 
     private Integer createdById;
 
     private String allowedIpRanges;
+
+    private String contestType;
 
 }
