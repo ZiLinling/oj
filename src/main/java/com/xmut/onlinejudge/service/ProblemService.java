@@ -14,4 +14,6 @@ import com.xmut.onlinejudge.entity.Problem;
 public interface ProblemService extends IService<Problem> {
 
     Page<Row> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag);
+
+    Problem getByDisplayId(String displayId);
 }

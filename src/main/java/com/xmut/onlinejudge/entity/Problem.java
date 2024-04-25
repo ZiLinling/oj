@@ -1,9 +1,11 @@
 package com.xmut.onlinejudge.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
+import com.mybatisflex.core.handler.FastjsonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * 实体类。
@@ -38,7 +41,8 @@ public class Problem implements Serializable {
 
     private String outputDescription;
 
-    private String samples;
+    @Column(typeHandler = FastjsonTypeHandler.class)
+    private List<JSONObject> samples;
 
     private String testCaseId;
 
@@ -46,7 +50,8 @@ public class Problem implements Serializable {
 
     private String hint;
 
-    private String languages;
+    @Column(typeHandler = FastjsonTypeHandler.class)
+    private List<String> languages;
 
     private String template;
 
@@ -93,7 +98,8 @@ public class Problem implements Serializable {
 
     private Boolean spjCompileOk;
 
-    private String ioMode;
+    @Column(typeHandler = FastjsonTypeHandler.class)
+    private JSONObject ioMode;
 
     private Boolean shareSubmission;
 

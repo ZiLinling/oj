@@ -4,9 +4,10 @@
 <mapper namespace="com.xmut.onlinejudge.mapper.ProblemMapper">
 
     <select id="listForUser" resultType="com.mybatisflex.core.row.Row">
-        SELECT problem.*, string_agg(problem_tag.name, ',') AS tags, "user".username AS created_user
+        SELECT problem.id, _id, difficulty , title, submission_number,accepted_number, string_agg(problem_tag.name, ',')
+        AS tags
+        -- 缺少my_status
         FROM problem
-        JOIN "user" ON problem.created_by_id = "user".id
         LEFT JOIN problem_tags ON problem.id = problem_tags.problem_id
         LEFT JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
         ${qwSql}
@@ -19,7 +20,7 @@
             AND problem_tag.name = #{tag}
             )
         </if>
-        GROUP BY problem.id, "user".username
+        GROUP BY problem.id
         LIMIT #{pageSize} OFFSET #{pageOffset};
     </select>
 

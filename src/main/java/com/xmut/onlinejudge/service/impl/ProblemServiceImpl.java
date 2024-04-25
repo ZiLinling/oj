@@ -26,7 +26,6 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
     @Override
     public Page<Row> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        Page<Row> page = new Page<>(pageNum, pageSize);
         queryWrapper.where(PROBLEM.VISIBLE.eq(true));
         if (keyword != null && !keyword.equals("")) {
             queryWrapper.and(PROBLEM.TITLE.like("%" + keyword + "%"));
@@ -35,10 +34,18 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
             queryWrapper.and(PROBLEM.DIFFICULTY.eq(difficulty));
         }
         Map<String, Object> otherParams = new HashMap<>();
-        System.out.println(tag);
         otherParams.put("tag", tag);
-
         return this.mapper.xmlPaginate("listForUser", Page.of(pageNum, pageSize), queryWrapper, otherParams);
     }
+
+    @Override
+    public Problem getByDisplayId(String displayId) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.where(PROBLEM._ID.eq(displayId));
+        queryWrapper.and(PROBLEM.VISIBLE.eq(true));
+        Problem problem = this.mapper.selectOneByQuery(queryWrapper);
+        return problem;
+    }
+
 
 }

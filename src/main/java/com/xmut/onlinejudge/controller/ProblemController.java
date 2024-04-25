@@ -57,15 +57,16 @@ public class ProblemController {
     }
 
 
-    /**
-     * 根据主键获取详细信息。
-     *
-     * @param id 主键
-     * @return 详情
-     */
-    @GetMapping("getInfo/{id}")
-    public Problem getInfo(@PathVariable Serializable id) {
-        return problemService.getById(id);
+    @GetMapping("")
+    public Result<Problem> getInfo(String displayId) {
+        Result<Problem> result = new Result<>();
+        Problem problem = problemService.getByDisplayId(displayId);
+        if (problem != null) {
+            result.success(problem, "查询成功");
+        } else {
+            result.error("该问题不存在");
+        }
+        return result;
     }
 
 

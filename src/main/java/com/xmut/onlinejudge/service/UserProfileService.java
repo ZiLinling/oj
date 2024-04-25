@@ -10,5 +10,5 @@ import com.xmut.onlinejudge.entity.UserProfile;
  * @since 2024-03-05
  */
 public interface UserProfileService extends IService<UserProfile> {
-    UserProfile findByName(String username);
+
 }

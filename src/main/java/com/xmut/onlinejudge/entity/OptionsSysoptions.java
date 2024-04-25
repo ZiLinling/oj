@@ -1,8 +1,10 @@
 package com.xmut.onlinejudge.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
+import com.mybatisflex.core.handler.FastjsonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +32,7 @@ public class OptionsSysoptions implements Serializable {
 
     private String key;
 
-    private String value;
+    @Column(typeHandler = FastjsonTypeHandler.class)
+    private Object value;
 
 }

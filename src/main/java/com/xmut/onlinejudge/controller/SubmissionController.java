@@ -1,14 +1,18 @@
 package com.xmut.onlinejudge.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Submission;
+import com.xmut.onlinejudge.service.ProblemService;
 import com.xmut.onlinejudge.service.SubmissionService;
 import com.xmut.onlinejudge.utils.DateUtil;
 import com.xmut.onlinejudge.utils.JudgeUtil;
+import com.xmut.onlinejudge.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.List;
 
@@ -24,6 +28,15 @@ public class SubmissionController {
 
     @Autowired
     private SubmissionService submissionService;
+
+    @Autowired
+    private ProblemService problemService;
+
+    @Autowired
+    private JudgeUtil judgeUtil;
+
+    @Autowired
+    private HttpServletRequest request;
 
     /**
      * 添加。
@@ -91,12 +104,25 @@ public class SubmissionController {
     }
 
 
-    @PostMapping("submit")
-    public Result<Submission> submit(@RequestBody Submission submission) {
-        Result result = new Result();
+    @PostMapping("")
+    public Result<Submission> submit(@RequestBody Submission submission) throws JsonProcessingException {
+        Result<Submission> result = new Result<>();
         submission.setCreateTime(DateUtil.getCurrTime());
-        JudgeUtil.judge(submission, null);
+        submission.setUserId(JwtUtil.getUserId(request.getHeader("token")));
+        submissionService.save(submission);
+        //异步判题
+        judgeUtil.judge(submission, problemService.getById(submission.getProblemId()));
 
+        result.success(submission, "提交成功");
+        return result;
+    }
+
+    @GetMapping("")
+    public Result<Submission> submit(String id) {
+        Result<Submission> result = new Result<>();
+        Submission submission = submissionService.getById(id);
+
+        result.success(submission, "提交成功");
         return result;
     }
 

@@ -24,14 +24,15 @@ public class JwtUtil {
         return token;
     }
 
-    static public Integer parseToken(String token, String key) {
+    static public Object parseToken(String token, String key) {
         JWTVerifier jwtVerifier = JWT.require(algorithm).build();
         return jwtVerifier.verify(token).getClaim(key).asInt();
     }
 
     static public Integer getUserId(String token) {
-        return parseToken(token, "id");
+        return (Integer) parseToken(token, "id");
     }
+
 
     static public void checkToken(String token) {
         if (token == null) {
