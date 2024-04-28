@@ -26,19 +26,25 @@ public class JwtUtil {
 
     static public Object parseToken(String token, String key) {
         JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-        return jwtVerifier.verify(token).getClaim(key).asInt();
+        return jwtVerifier.verify(token).getClaim(key).as(Object.class);
     }
 
     static public Integer getUserId(String token) {
         return (Integer) parseToken(token, "id");
     }
 
+    static public String getUsername(String token) {
+        return (String) parseToken(token, "username");
+    }
 
-    static public void checkToken(String token) {
-        if (token == null) {
-            token = "";
+
+    static public Boolean verifyToken(String token) {
+        try {
+            JWTVerifier jwtVerifier = JWT.require(algorithm).build();
+            jwtVerifier.verify(token);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
-        JWTVerifier jwtVerifier = JWT.require(algorithm).build();
-        jwtVerifier.verify(token);
     }
 }

@@ -4,7 +4,8 @@
 <mapper namespace="com.xmut.onlinejudge.mapper.ProblemMapper">
 
     <select id="listForUser" resultType="com.mybatisflex.core.row.Row">
-        SELECT problem.id, _id, difficulty , title, submission_number,accepted_number, string_agg(problem_tag.name, ',')
+        SELECT problem.id, _id, difficulty , title, submission_number,accepted_number,rule_type,
+        string_agg(problem_tag.name, ',')
         AS tags
         -- 缺少my_status
         FROM problem

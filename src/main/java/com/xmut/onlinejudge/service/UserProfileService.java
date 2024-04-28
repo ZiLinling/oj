@@ -11,4 +11,6 @@ import com.xmut.onlinejudge.entity.UserProfile;
  */
 public interface UserProfileService extends IService<UserProfile> {
 
+    UserProfile getByUserId(Integer userId);
+
 }

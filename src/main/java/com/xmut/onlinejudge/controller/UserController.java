@@ -46,7 +46,7 @@ public class UserController {
     @PostMapping("login")
     public Result<String> login(@RequestBody User user) {
         Result<String> result = new Result<String>();
-        User getter = userService.getByUsername(user.getUsername());
+        User getter = userService.getByUsernameWithPassword(user.getUsername());
         if (getter != null) {
             if (getter.getPassword().equals(user.getPassword())) {
                 if (getter.getIsDisabled()) {
@@ -66,10 +66,13 @@ public class UserController {
     @GetMapping("logout")
     public Result<String> logout() {
         Result<String> result = new Result<String>();
-        Integer userId = JwtUtil.getUserId(request.getHeader("token"));
-        User user = userService.getById(userId);
-        user.setLastLogin(DateUtil.getCurrTime());
-        userService.updateById(user);
+        String token = request.getHeader("token");
+        if (JwtUtil.verifyToken(token)) {
+            Integer userId = JwtUtil.getUserId(token);
+            User user = userService.getById(userId);
+            user.setLastLogin(DateUtil.getCurrTime());
+            userService.updateById(user);
+        }
         result.success(null, "登出成功");
         return result;
     }

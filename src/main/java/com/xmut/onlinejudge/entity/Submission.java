@@ -1,9 +1,11 @@
 package com.xmut.onlinejudge.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
+import com.mybatisflex.core.handler.FastjsonTypeHandler;
 import com.mybatisflex.core.keygen.KeyGenerators;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,6 +36,9 @@ public class Submission implements Serializable {
 
     private Integer problemId;
 
+    @Column(ignore = true)
+    private String problemDisplayId;
+
     private String createTime;
 
     private Integer userId;
@@ -43,16 +48,16 @@ public class Submission implements Serializable {
     @Column(onInsertValue = "6")
     private Integer result;
 
-    @Column(onInsertValue = "'{}'")
-    private String info;
+    @Column(onInsertValue = "'{}'", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject info;
 
     private String language;
 
     @Column(onInsertValue = "false")
     private Boolean shared;
 
-    @Column(onInsertValue = "'{}'")
-    private String statisticInfo;
+    @Column(onInsertValue = "'{}'", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject statisticInfo;
 
     private String username;
 

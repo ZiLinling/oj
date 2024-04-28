@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 控制层。
@@ -71,15 +70,7 @@ public class SubmissionController {
         return submissionService.updateById(submission);
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<Submission> list() {
-        return submissionService.list();
-    }
+
 
     /**
      * 根据主键获取详细信息。
@@ -98,9 +89,17 @@ public class SubmissionController {
      * @param page 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    public Page<Submission> page(Page<Submission> page) {
-        return submissionService.page(page);
+    @GetMapping("list")
+    public Result<Page<Submission>> page(Integer limit, Integer page, Boolean myself, String username, @RequestParam(value = "result", required = false) Integer resultStatus) {
+        Result<Page<Submission>> result = new Result<>();
+        Integer userId = null;
+        String token = request.getHeader("token");
+        if (myself && JwtUtil.verifyToken(token)) {
+            userId = JwtUtil.getUserId(token);
+        }
+        Page<Submission> submissionPage = submissionService.page(page, limit, username, resultStatus, userId);
+        result.success(submissionPage, "查询成功");
+        return result;
     }
 
 
@@ -109,21 +108,34 @@ public class SubmissionController {
         Result<Submission> result = new Result<>();
         submission.setCreateTime(DateUtil.getCurrTime());
         submission.setUserId(JwtUtil.getUserId(request.getHeader("token")));
+        submission.setUsername(JwtUtil.getUsername(request.getHeader("token")));
+        submission.setIp(request.getRemoteAddr());
         submissionService.save(submission);
         //异步判题
         judgeUtil.judge(submission, problemService.getById(submission.getProblemId()));
-
         result.success(submission, "提交成功");
         return result;
     }
 
     @GetMapping("")
-    public Result<Submission> submit(String id) {
+    public Result<Submission> getInfo(String id) {
         Result<Submission> result = new Result<>();
         Submission submission = submissionService.getById(id);
-
         result.success(submission, "提交成功");
         return result;
     }
+
+    @GetMapping("exist")
+    public Result<Boolean> judgeExist(Integer problemId) {
+        Result<Boolean> result = new Result<>();
+        String token = request.getHeader("token");
+        Boolean isExist = false;
+        if (JwtUtil.verifyToken(token)) {
+            isExist = submissionService.isExist(problemId, JwtUtil.getUserId(token));
+        }
+        result.success(isExist, "查询成功");
+        return result;
+    }
+
 
 }

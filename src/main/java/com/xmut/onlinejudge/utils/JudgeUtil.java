@@ -8,6 +8,7 @@ import com.xmut.onlinejudge.entity.OptionsSysoptions;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.entity.Submission;
 import com.xmut.onlinejudge.service.OptionsSysoptionsService;
+import com.xmut.onlinejudge.service.SubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,8 +32,22 @@ public class JudgeUtil {
     @Autowired
     private OptionsSysoptionsService optionsSysoptionsService;
 
+    public static final int COMPILE_ERROR = -2;
+
     private static String token = "TOKEN";
     private String serverBaseUrl;
+    public static final int WRONG_ANSWER = -1;
+    public static final int ACCEPTED = 0;
+    public static final int CPU_TIME_LIMIT_EXCEEDED = 1;
+    public static final int REAL_TIME_LIMIT_EXCEEDED = 2;
+    public static final int MEMORY_LIMIT_EXCEEDED = 3;
+    public static final int RUNTIME_ERROR = 4;
+    public static final int SYSTEM_ERROR = 5;
+    public static final int PENDING = 6;
+    public static final int JUDGING = 7;
+    public static final int PARTIALLY_ACCEPTED = 8;
+    @Autowired
+    private SubmissionService submissionService;
 
     JudgeUtil() {
         System.setProperty("http.proxySet", "true");
@@ -134,7 +149,7 @@ public class JudgeUtil {
         taskInfo.put("language_config", getLanguageConfig(submission.getLanguage()));
         taskInfo.put("src", submission.getCode());
         taskInfo.put("max_cpu_time", problem.getTimeLimit());
-        taskInfo.put("max_memory", problem.getMemoryLimit());
+        taskInfo.put("max_memory", problem.getMemoryLimit() * 1024 * 1024);
         taskInfo.put("test_case_id", problem.getTestCaseId());
         taskInfo.put("spj_version", problem.getSpjVersion());
         taskInfo.put("spj_config", null);
@@ -145,7 +160,59 @@ public class JudgeUtil {
         HttpEntity<String> entity = new HttpEntity<>(taskInfo.toString(), headers);
         //发送请求
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(judgeUrl, entity, String.class);
-        String result = responseEntity.getBody();
-        System.out.println(result);
+        String data = responseEntity.getBody();
+        JSONObject result = JSON.parseObject(data);
+        if (result.get("err") != null) {
+            JSONObject staticInfo = new JSONObject();
+            staticInfo.put("err_info", result.get("data"));
+            staticInfo.put("score", 0);
+            submission.setResult(COMPILE_ERROR);
+            submission.setStatisticInfo(staticInfo);
+        } else {
+            submission.setInfo(result);
+            JSONArray testData = result.getObject("data", JSONArray.class);
+            computeStatisticInfo(submission, testData, problem);
+            JSONArray errorTestCase = testData.stream()
+                    .filter(caseObj -> ((JSONObject) caseObj).getIntValue("result") != 0)
+                    .collect(JSONArray::new, JSONArray::add, JSONArray::addAll);
+            //ACM模式下,多个测试点全部正确则AC，否则取第一个错误的测试点的状态
+            //OI模式下, 若多个测试点全部正确则AC， 若全部错误则取第一个错误测试点状态，否则为部分正确
+            if (errorTestCase.isEmpty()) {
+                submission.setResult(ACCEPTED);
+            } else if (problem.getRuleType().equals("ACM") || errorTestCase.size() == testData.size()) {
+                submission.setResult(errorTestCase.getJSONObject(0).getIntValue("result"));
+            } else {
+                submission.setResult(PARTIALLY_ACCEPTED);
+            }
+        }
+        submissionService.saveOrUpdate(submission);
     }
+
+    private void computeStatisticInfo(Submission submission, JSONArray testData, Problem problem) {
+        // 用时和内存占用保存为多个测试点中最长的那个
+        int timeCost = testData.stream().mapToInt(o -> ((JSONObject) o).getIntValue("cpu_time")).max().orElse(0);
+        int memoryCost = testData.stream().mapToInt(o -> ((JSONObject) o).getIntValue("memory")).max().orElse(0);
+        JSONObject staticInfo = new JSONObject();
+        staticInfo.put("time_cost", timeCost);
+        staticInfo.put("memory_cost", memoryCost);
+
+        // sum up the score in OI mode
+        if (problem.getRuleType().equals("OI")) {
+            int score = 0;
+            for (int i = 0; i < testData.size(); i++) {
+                JSONObject testCase = testData.getJSONObject(i);
+                if (testCase.getIntValue("result") == ACCEPTED) {
+                    int testCaseScore = problem.getTestCaseScore().getJSONObject(i).getIntValue("score");
+                    testCase.put("score", testCaseScore);
+                    score += testCaseScore;
+                } else {
+                    testCase.put("score", 0);
+                }
+                testData.set(i, testCase);
+            }
+            staticInfo.put("score", score);
+        }
+        submission.setStatisticInfo(staticInfo);
+    }
+
 }

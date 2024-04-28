@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.entity;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
@@ -42,11 +43,12 @@ public class Problem implements Serializable {
     private String outputDescription;
 
     @Column(typeHandler = FastjsonTypeHandler.class)
-    private List<JSONObject> samples;
+    private JSONArray samples;
 
     private String testCaseId;
 
-    private String testCaseScore;
+    @Column(typeHandler = FastjsonTypeHandler.class)
+    private JSONArray testCaseScore;
 
     private String hint;
 
@@ -86,7 +88,7 @@ public class Problem implements Serializable {
     private Integer createdById;
 
     @Column(value = "_id")
-    private String _id;
+    private String displayId;
 
     private String statisticInfo;
 

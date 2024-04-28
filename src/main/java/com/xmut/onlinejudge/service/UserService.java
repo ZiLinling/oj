@@ -11,7 +11,9 @@ import com.xmut.onlinejudge.entity.User;
  */
 public interface UserService extends IService<User> {
 
-    User getByUsername(String username);
+    User getByUsernameWithoutPassword(String username);
+
+    User getByUsernameWithPassword(String username);
 
     Boolean isUsernameExist(String username);
 

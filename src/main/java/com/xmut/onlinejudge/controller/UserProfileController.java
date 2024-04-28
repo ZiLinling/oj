@@ -3,12 +3,16 @@ package com.xmut.onlinejudge.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
+import com.xmut.onlinejudge.entity.User;
 import com.xmut.onlinejudge.entity.UserProfile;
 import com.xmut.onlinejudge.service.UserProfileService;
 import com.xmut.onlinejudge.service.UserService;
+import com.xmut.onlinejudge.utils.FileUtil;
 import com.xmut.onlinejudge.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
@@ -32,6 +36,10 @@ public class UserProfileController {
 
     @Autowired
     private HttpServletRequest request;
+
+    private final String AVATAR_URI_PREFIX = "/public/avatar"; // 头像URI前缀
+    @Value("${files.upload.avatar.path}")
+    private String AVATAR_UPLOAD_DIR;
 
     /**
      * 添加。
@@ -91,31 +99,50 @@ public class UserProfileController {
     }
 
     @GetMapping("")
-    public Result<JSONObject> getByToken() {
+    public Result<JSONObject> getByUsername(@RequestParam(required = false) String username) {
         Result<JSONObject> result = new Result<>();
-        String token = request.getHeader("token");
-        if (token != null) {
-            Integer userId = JwtUtil.getUserId(token);
-            UserProfile userProfile = userProfileService.getById(userId);
+        if (username == null) {
+            String token = request.getHeader("token");
+            if (JwtUtil.verifyToken(token)) {
+                username = JwtUtil.getUsername(token);
+            } else {
+                result.success(null, "尚未登录");
+                return result;
+            }
+        }
+        User user = userService.getByUsernameWithoutPassword(username);
+        if (user == null || user.getIsDisabled()) {
+            result.success(null, "获取用户信息失败");
+        } else {
+            UserProfile userProfile = userProfileService.getByUserId(user.getId());
             if (userProfile != null) {
                 //将userProfile转为json对象
                 JSONObject data = (JSONObject) JSONObject.toJSON(userProfile);
-                //删除userId
-                data.remove("userId");
-                //将user转为json对象
-                JSONObject user = (JSONObject) JSONObject.toJSON(userService.getById(userId));
-                //删除密码
-                user.remove("password");
-                //存入data
                 data.put("user", user);
                 result.success(data, "获取用户信息成功");
             } else {
                 result.success(null, "获取用户信息失败");
             }
-        } else {
-            result.success(null, "获取用户信息失败");
         }
         return result;
     }
 
+    @PostMapping("upload_avatar")
+    public Result<String> uploadAvatar(@RequestParam("image") MultipartFile file, @RequestHeader("token") String token) {
+        Result<String> result = new Result<>();
+        if (!JwtUtil.verifyToken(token)) {
+            result.error("Invalid token");
+            return result;
+        }
+        Result<String> uploadResult = FileUtil.upload(file, AVATAR_UPLOAD_DIR, AVATAR_URI_PREFIX);
+        if (uploadResult.getError() == null) {
+            UserProfile userProfile = userProfileService.getByUserId(JwtUtil.getUserId(token));
+            userProfile.setAvatar(uploadResult.getData());
+            userProfileService.updateById(userProfile);
+            result.success(null, "Success");
+        } else {
+            result.error("Failed to upload");
+        }
+        return result;
+    }
 }

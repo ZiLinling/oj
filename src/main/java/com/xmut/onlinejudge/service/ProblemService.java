@@ -1,7 +1,7 @@
 package com.xmut.onlinejudge.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
-import com.mybatisflex.core.row.Row;
 import com.mybatisflex.core.service.IService;
 import com.xmut.onlinejudge.entity.Problem;
 
@@ -13,7 +13,7 @@ import com.xmut.onlinejudge.entity.Problem;
  */
 public interface ProblemService extends IService<Problem> {
 
-    Page<Row> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag);
+    Page<JSONObject> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag);
 
     Problem getByDisplayId(String displayId);
 }

@@ -1,8 +1,8 @@
 package com.xmut.onlinejudge.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
-import com.mybatisflex.core.row.Row;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.mapper.ProblemMapper;
@@ -24,7 +24,7 @@ import static com.xmut.onlinejudge.entity.table.ProblemTableDef.PROBLEM;
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> implements ProblemService {
 
     @Override
-    public Page<Row> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag) {
+    public Page<JSONObject> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.where(PROBLEM.VISIBLE.eq(true));
         if (keyword != null && !keyword.equals("")) {
@@ -41,7 +41,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
     @Override
     public Problem getByDisplayId(String displayId) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.where(PROBLEM._ID.eq(displayId));
+        queryWrapper.where(PROBLEM.DISPLAY_ID.eq(displayId));
         queryWrapper.and(PROBLEM.VISIBLE.eq(true));
         Problem problem = this.mapper.selectOneByQuery(queryWrapper);
         return problem;
