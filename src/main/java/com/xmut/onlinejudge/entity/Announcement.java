@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -9,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 /**
  * 实体类。
@@ -33,16 +33,22 @@ public class Announcement implements Serializable {
 
     private String content;
 
-    private Timestamp createTime;
+    @Column(onInsertValue = "to_char(now(), 'YYYY-MM-DD HH24:MI:SS')")
+    private String createTime;
 
-    private Timestamp lastUpdateTime;
+    @Column(onInsertValue = "to_char(now(), 'YYYY-MM-DD HH24:MI:SS')")
+    private String lastUpdateTime;
 
     private Boolean visible;
 
     private Integer createdById;
 
+    @Column(onInsertValue = "false")
     private Boolean contest;
 
     private Integer contestId;
+
+    @Column(ignore = true)
+    private String creator;
 
 }

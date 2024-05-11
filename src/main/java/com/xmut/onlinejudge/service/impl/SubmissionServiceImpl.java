@@ -43,4 +43,11 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         queryWrapper.orderBy("create_time", false);
         return this.mapper.paginate(Page.of(pageNum, pageSize), queryWrapper);
     }
+
+    @Override
+    public Long countTodaySubmissions(String today) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.where(SUBMISSION.CREATE_TIME.like(today + "%"));
+        return this.count(queryWrapper);
+    }
 }

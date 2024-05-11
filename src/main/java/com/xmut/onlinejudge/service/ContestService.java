@@ -15,4 +15,6 @@ public interface ContestService extends IService<Contest> {
 
     Page<Row> page(Integer pageNum, Integer pageSize, Integer status);
 
+    Long countRecentContests(String currentTime);
+
 }

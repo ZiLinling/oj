@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xmut.onlinejudge.entity.OptionsSysoptions;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.entity.Submission;
 import com.xmut.onlinejudge.service.OptionsSysoptionsService;
@@ -111,9 +110,8 @@ public class JudgeUtil {
         if (redisUtil.hasKey("languages")) {
             data = (JSONArray) redisUtil.get("languages");
         } else {
-            OptionsSysoptions languages = optionsSysoptionsService.getValue("languages");
-            redisUtil.set("languages", languages.getValue(), 60 * 60);
-            data = (JSONArray) languages.getValue();
+            data = (JSONArray) optionsSysoptionsService.getValue("languages");
+            redisUtil.set("languages", data, 60 * 60);
         }
         JSONObject languageConfig = null;
         for (Object item : data) {

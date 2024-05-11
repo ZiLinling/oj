@@ -4,10 +4,11 @@ import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.Announcement;
 import com.xmut.onlinejudge.service.AnnouncementService;
+import com.xmut.onlinejudge.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.Serializable;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 控制层。
@@ -22,66 +23,59 @@ public class AnnouncementController {
     @Autowired
     private AnnouncementService announcementService;
 
-    /**
-     * 添加。
-     *
-     * @param announcement
-     * @return {@code true} 添加成功，{@code false} 添加失败
-     */
-    @PostMapping("save")
-    public boolean save(@RequestBody Announcement announcement) {
-        return announcementService.save(announcement);
+    @Autowired
+    private HttpServletRequest request;
+
+
+    @GetMapping("admin/list")
+    public Result<Page<Announcement>> pageForAdmin(Integer page, Integer limit) {
+        Result<Page<Announcement>> result = new Result<>();
+        Page<Announcement> announcementPage = announcementService.page(page, limit, true);
+        result.success(announcementPage, "查询成功");
+        return result;
     }
-
-    /**
-     * 根据主键删除。
-     *
-     * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
-     */
-    @DeleteMapping("remove/{id}")
-    public boolean remove(@PathVariable Serializable id) {
-        return announcementService.removeById(id);
-    }
-
-    /**
-     * 根据主键更新。
-     *
-     * @param announcement
-     * @return {@code true} 更新成功，{@code false} 更新失败
-     */
-    @PutMapping("update")
-    public boolean update(@RequestBody Announcement announcement) {
-        return announcementService.updateById(announcement);
-    }
-
-
-
-    /**
-     * 根据主键获取详细信息。
-     *
-     * @param id 主键
-     * @return 详情
-     */
-    @GetMapping("getInfo/{id}")
-    public Announcement getInfo(@PathVariable Serializable id) {
-        return announcementService.getById(id);
-    }
-
-    /**
-     * 分页查询。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
-
 
     @GetMapping("list")
-    public Result<Page<Announcement>> page(Integer limit, Integer page) {
+    public Result<Page<Announcement>> pageForUser(Integer page, Integer limit) {
         Result<Page<Announcement>> result = new Result<>();
-        Page<Announcement> announcementPage = new Page<>(page, limit);
-        announcementPage = announcementService.page(announcementPage);
+        Page<Announcement> announcementPage = announcementService.page(page, limit, false);
         result.success(announcementPage, "查询成功");
+        return result;
+    }
+
+    @PostMapping("")
+    public Result<Announcement> save(@RequestBody Announcement announcement) {
+        Result<Announcement> result = new Result<>();
+        String token = request.getHeader("token");
+        Integer userId = JwtUtil.getUserId(token);
+        announcement.setCreatedById(userId);
+        if (announcementService.save(announcement)) {
+            result.success(null, "添加成功");
+        } else {
+            result.error("添加失败");
+        }
+        return result;
+    }
+
+    @PutMapping("")
+    public Result<Announcement> updateById(@RequestBody Announcement announcement) {
+        Result<Announcement> result = new Result<>();
+        if (announcementService.updateById(announcement)) {
+            result.success(null, "更新成功");
+        } else {
+            result.error("更新失败");
+        }
+        return result;
+    }
+
+    @DeleteMapping("")
+    public Result<Announcement> removeById(Integer id) {
+        Result<Announcement> result = new Result<>();
+        if (announcementService.removeById(id)) {
+            result.success(null, "删除成功");
+        } else {
+            result.error("删除失败");
+        }
         return result;
     }
 

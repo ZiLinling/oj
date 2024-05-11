@@ -22,4 +22,9 @@ public class UserProfileServiceImpl extends ServiceImpl<UserProfileMapper, UserP
     public UserProfile getByUserId(Integer userId) {
         return this.getOne(USER_PROFILE.USER_ID.eq(userId));
     }
+
+    @Override
+    public void removeByUserId(Integer userId) {
+        this.mapper.deleteByCondition(USER_PROFILE.USER_ID.eq(userId));
+    }
 }

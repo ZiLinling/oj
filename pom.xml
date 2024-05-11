@@ -47,13 +47,26 @@
             <optional>true</optional>
         </dependency>
 
-        <!--mybatis-plus-->
-        <!--        <dependency>-->
-        <!--            <groupId>com.baomidou</groupId>-->
-        <!--            <artifactId>mybatis-plus-boot-starter</artifactId>-->
-        <!--            <version>3.5.5</version>-->
-        <!--        </dependency>-->
-        <!--mybatis-plus-->
+        <!--Apache POI-->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+        <!--Apache POI-->
+
+        <!--CommonUtils-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.9</version>
+        </dependency>
+        <!--CommonUtils-->
 
         <!--mybatis-flex-->
         <dependency>
@@ -72,6 +85,7 @@
             <version>4.0.3</version>
         </dependency>
         <!--mybatis-flex-->
+
         <!--email-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

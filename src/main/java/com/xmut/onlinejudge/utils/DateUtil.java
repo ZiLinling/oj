@@ -154,6 +154,19 @@ public class DateUtil {
         return null;
     }
 
+    public static long getDiffSeconds(String startTime, String endTime) {
+        SimpleDateFormat format = new SimpleDateFormat(LONGTIME);
+        try {
+            Date startDate = format.parse(startTime);
+            Date endDate = format.parse(endTime);
+            long diff = endDate.getTime() - startDate.getTime();
+            return diff / 1000; // 转换为秒
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1; // 错误情况下返回-1
+        }
+    }
+
     /**
      * 获取一年中的12个月份
      *

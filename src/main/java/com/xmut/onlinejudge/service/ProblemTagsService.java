@@ -11,4 +11,6 @@ import com.xmut.onlinejudge.entity.ProblemTags;
  */
 public interface ProblemTagsService extends IService<ProblemTags> {
 
+    void deleteByProblemId(Integer problemId);
+
 }

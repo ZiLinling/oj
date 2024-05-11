@@ -1,7 +1,5 @@
 package com.xmut.onlinejudge.controller;
 
-import com.alibaba.fastjson.JSONObject;
-import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.User;
 import com.xmut.onlinejudge.entity.UserProfile;
@@ -10,13 +8,11 @@ import com.xmut.onlinejudge.service.UserService;
 import com.xmut.onlinejudge.utils.FileUtil;
 import com.xmut.onlinejudge.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 控制层。
@@ -37,9 +33,9 @@ public class UserProfileController {
     @Autowired
     private HttpServletRequest request;
 
-    private final String AVATAR_URI_PREFIX = "/public/avatar"; // 头像URI前缀
-    @Value("${files.upload.avatar.path}")
-    private String AVATAR_UPLOAD_DIR;
+    @Autowired
+    private FileUtil fileUtil;
+
 
     /**
      * 添加。
@@ -72,35 +68,21 @@ public class UserProfileController {
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
     @PutMapping("update")
-    public boolean update(@RequestBody UserProfile userProfile) {
-        return userProfileService.updateById(userProfile);
+    public Result<UserProfile> update(@RequestBody UserProfile userProfile) {
+        Result<UserProfile> result = new Result<>();
+        userProfileService.updateById(userProfile);
+        userProfile = userProfileService.getById(userProfile.getId());
+        User user = userService.getById(userProfile.getId());
+        user.setPassword(null);
+        userProfile.setUser(user);
+        result.success(userProfile, "更新成功");
+        return result;
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<UserProfile> list() {
-        return userProfileService.list();
-    }
-
-
-    /**
-     * 分页查询。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
-    @GetMapping("page")
-    public Page<UserProfile> page(Page<UserProfile> page) {
-        return userProfileService.page(page);
-    }
 
     @GetMapping("")
-    public Result<JSONObject> getByUsername(@RequestParam(required = false) String username) {
-        Result<JSONObject> result = new Result<>();
+    public Result<UserProfile> getByUsername(@RequestParam(required = false) String username) {
+        Result<UserProfile> result = new Result<>();
         if (username == null) {
             String token = request.getHeader("token");
             if (JwtUtil.verifyToken(token)) {
@@ -116,10 +98,8 @@ public class UserProfileController {
         } else {
             UserProfile userProfile = userProfileService.getByUserId(user.getId());
             if (userProfile != null) {
-                //将userProfile转为json对象
-                JSONObject data = (JSONObject) JSONObject.toJSON(userProfile);
-                data.put("user", user);
-                result.success(data, "获取用户信息成功");
+                userProfile.setUser(user);
+                result.success(userProfile, "获取用户信息成功");
             } else {
                 result.success(null, "获取用户信息失败");
             }
@@ -134,14 +114,14 @@ public class UserProfileController {
             result.error("Invalid token");
             return result;
         }
-        Result<String> uploadResult = FileUtil.upload(file, AVATAR_UPLOAD_DIR, AVATAR_URI_PREFIX);
+        Result<String> uploadResult = fileUtil.uploadAvatar(file);
         if (uploadResult.getError() == null) {
             UserProfile userProfile = userProfileService.getByUserId(JwtUtil.getUserId(token));
             userProfile.setAvatar(uploadResult.getData());
             userProfileService.updateById(userProfile);
             result.success(null, "Success");
         } else {
-            result.error("Failed to upload");
+            result.error("Failed to uploadAvatar");
         }
         return result;
     }

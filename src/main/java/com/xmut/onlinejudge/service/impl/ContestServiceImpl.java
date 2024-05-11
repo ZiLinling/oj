@@ -48,4 +48,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         return this.pageAs(page, queryWrapper, Row.class);
     }
 
+    @Override
+    public Long countRecentContests(String currentTime) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.where(CONTEST.END_TIME.gt(currentTime));
+        return this.count(queryWrapper);
+    }
 }

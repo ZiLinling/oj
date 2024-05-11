@@ -1,18 +1,17 @@
 package com.xmut.onlinejudge.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.xmut.onlinejudge.VO.ProblemWithTags;
 import com.xmut.onlinejudge.entity.Problem;
 import com.xmut.onlinejudge.mapper.ProblemMapper;
 import com.xmut.onlinejudge.service.ProblemService;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.xmut.onlinejudge.VO.table.ProblemWithTagsTableDef.PROBLEM_WITH_TAGS;
 
-import static com.xmut.onlinejudge.entity.table.ProblemTableDef.PROBLEM;
+
 
 /**
  * 服务层实现。
@@ -24,28 +23,43 @@ import static com.xmut.onlinejudge.entity.table.ProblemTableDef.PROBLEM;
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> implements ProblemService {
 
     @Override
-    public Page<JSONObject> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag) {
+    public Page<ProblemWithTags> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag, Boolean isAdmin) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.where(PROBLEM.VISIBLE.eq(true));
         if (keyword != null && !keyword.equals("")) {
-            queryWrapper.and(PROBLEM.TITLE.like("%" + keyword + "%"));
+            queryWrapper.and(PROBLEM_WITH_TAGS.TITLE.like("%" + keyword + "%"))
+                    .or(PROBLEM_WITH_TAGS.DISPLAY_ID.like("%" + keyword + "%"));
         }
         if (difficulty != null && !difficulty.equals("")) {
-            queryWrapper.and(PROBLEM.DIFFICULTY.eq(difficulty));
+            queryWrapper.and(PROBLEM_WITH_TAGS.DIFFICULTY.eq(difficulty));
         }
-        Map<String, Object> otherParams = new HashMap<>();
-        otherParams.put("tag", tag);
-        return this.mapper.xmlPaginate("listForUser", Page.of(pageNum, pageSize), queryWrapper, otherParams);
+        if (tag != null && !tag.equals("")) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.TAGS.like("%\"" + tag + "\"%"));
+        }
+        if (!isAdmin) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.VISIBLE.eq(true));
+        }
+        queryWrapper.orderBy(PROBLEM_WITH_TAGS.ID, true);
+        queryWrapper.from(PROBLEM_WITH_TAGS);
+        return this.mapper.paginateAs(pageNum, pageSize, queryWrapper, ProblemWithTags.class);
+
     }
 
     @Override
-    public Problem getByDisplayId(String displayId) {
+    public ProblemWithTags getByDisplayId(String displayId, Boolean isAdmin) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.where(PROBLEM.DISPLAY_ID.eq(displayId));
-        queryWrapper.and(PROBLEM.VISIBLE.eq(true));
-        Problem problem = this.mapper.selectOneByQuery(queryWrapper);
-        return problem;
+        queryWrapper.where(PROBLEM_WITH_TAGS.DISPLAY_ID.eq(displayId));
+        queryWrapper.from(PROBLEM_WITH_TAGS);
+        if (!isAdmin) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.VISIBLE.eq(true));
+        }
+        return this.mapper.selectOneByQueryAs(queryWrapper, ProblemWithTags.class);
     }
 
-
+    @Override
+    public ProblemWithTags getById(Integer id) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.where(PROBLEM_WITH_TAGS.ID.eq(id));
+        queryWrapper.from(PROBLEM_WITH_TAGS);
+        return this.mapper.selectOneByQueryAs(queryWrapper, ProblemWithTags.class);
+    }
 }

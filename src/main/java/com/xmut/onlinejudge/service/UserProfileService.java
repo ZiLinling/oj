@@ -13,4 +13,6 @@ public interface UserProfileService extends IService<UserProfile> {
 
     UserProfile getByUserId(Integer userId);
 
+    void removeByUserId(Integer userId);
+
 }

@@ -11,5 +11,7 @@ import com.xmut.onlinejudge.entity.OptionsSysoptions;
  */
 public interface OptionsSysoptionsService extends IService<OptionsSysoptions> {
 
-    OptionsSysoptions getValue(String key);
+    Object getValue(String key);
+
+    void updateValue(String key, Object value);
 }

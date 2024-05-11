@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.JudgeServer;
@@ -8,9 +9,9 @@ import com.xmut.onlinejudge.utils.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -25,6 +26,9 @@ public class JudgeServerController {
 
     @Autowired
     private JudgeServerService judgeServerService;
+
+    @Autowired
+    private HttpServletRequest request;
 
     /**
      * 添加。
@@ -68,16 +72,6 @@ public class JudgeServerController {
         return judgeServerService.updateById(judgeServer);
     }
 
-    /**
-     * 查询所有。
-     *
-     * @return 所有数据
-     */
-    @GetMapping("list")
-    public List<JudgeServer> list() {
-        System.out.println(judgeServerService.list());
-        return judgeServerService.list();
-    }
 
     /**
      * 根据主键获取详细信息。
@@ -102,17 +96,47 @@ public class JudgeServerController {
     }
 
     @PostMapping("/judge_server_heartbeat")
-    public Result judgeServerHeartbeat(@RequestBody Map<String, Object> response) {
-        JudgeServer judgeServer = new JudgeServer();
-        judgeServer.setId(1);//当前系统只设置一台判题机
-        judgeServer.setHostname(response.get("hostname").toString());
-        judgeServer.setCpuCore(Integer.parseInt(response.get("cpu_core").toString()));
-        judgeServer.setMemory(Double.parseDouble(response.get("memory").toString()));
-        judgeServer.setCpu(Double.parseDouble(response.get("cpu").toString()));
-        judgeServer.setJudgerVersion(response.get("judger_version").toString());
-        judgeServer.setLastHeartbeat(DateUtil.getCurrTime());
-        judgeServerService.updateById(judgeServer);
-        return null;
+    public void judgeServerHeartbeat(@RequestBody JSONObject response) {
+        JudgeServer getter = judgeServerService.getByHostnameAndIp(response.getString("hostname"), request.getRemoteAddr());
+        JudgeServer judgeServer = new JudgeServer(null, request.getRemoteAddr(), response.getString("hostname"),
+                response.getString("judger_version"), response.getInteger("cpu_core"),
+                response.getDouble("memory"), response.getDouble("cpu"), DateUtil.getCurrTime(),
+                DateUtil.getCurrTime(), 0, response.getString("service_url"),
+                false, null);
+        if (getter != null) {
+            judgeServer.setId(getter.getId());
+            judgeServer.setTaskNumber(getter.getTaskNumber());
+            judgeServer.setCreateTime(getter.getCreateTime());
+            judgeServer.setIsDisabled(getter.getIsDisabled());
+        }
+        judgeServerService.saveOrUpdate(judgeServer);
+    }
+
+    @GetMapping("")
+    public Result<List<JudgeServer>> list() {
+        Result<List<JudgeServer>> result = new Result<>();
+        List<JudgeServer> serverList = judgeServerService.list();
+        result.success(serverList, "查询成功");
+        return result;
+    }
+
+    @PutMapping("")
+    public Result<JudgeServer> updateById(@RequestBody JudgeServer server) {
+        Result<JudgeServer> result = new Result<>();
+        if (judgeServerService.updateById(server)) {
+            result.success(null, "更新成功");
+        } else {
+            result.error("更新失败");
+        }
+        return result;
+    }
+
+    @DeleteMapping("")
+    public Result<JudgeServer> removeByHostnameAndIp(String hostname, String ip) {
+        Result<JudgeServer> result = new Result<>();
+        judgeServerService.deleteByHostnameAndIp(hostname, ip);
+        result.success(null, "删除成功");
+        return result;
     }
 
 }

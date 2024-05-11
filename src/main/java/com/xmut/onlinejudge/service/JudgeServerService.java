@@ -11,4 +11,10 @@ import com.xmut.onlinejudge.entity.JudgeServer;
  */
 public interface JudgeServerService extends IService<JudgeServer> {
 
+    Long countNormalJudgeServers();
+
+    JudgeServer getByHostnameAndIp(String hostname, String ip);
+
+    void deleteByHostnameAndIp(String hostname, String ip);
+
 }

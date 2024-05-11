@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.entity;
 
+import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -36,15 +37,19 @@ public class User implements Serializable {
 
     private String email;
 
+    @Column(onInsertValue = "to_char(now(), 'YYYY-MM-DD HH24:MI:SS')")
     private String createTime;
 
-    private Integer adminType;
+    @Column(onInsertValue = "'Regular User'")
+    private String adminType;
 
-    private String authToken;
-
+    @Column(onInsertValue = "false")
     private Boolean isDisabled;
 
     private String problemPermission;
 
-
+    public User(String username, String password) {
+        this.password = password;
+        this.username = username;
+    }
 }

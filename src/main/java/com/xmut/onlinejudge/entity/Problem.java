@@ -13,7 +13,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -55,11 +54,13 @@ public class Problem implements Serializable {
     @Column(typeHandler = FastjsonTypeHandler.class)
     private List<String> languages;
 
-    private String template;
+    @Column(onInsertValue = "'{}'", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject template;
 
-    private Timestamp createTime;
+    @Column(onInsertValue = "to_char(now(), 'YYYY-MM-DD HH24:MI:SS')")
+    private String createTime;
 
-    private Timestamp lastUpdateTime;
+    private String lastUpdateTime;
 
     private Integer timeLimit;
 
@@ -81,8 +82,10 @@ public class Problem implements Serializable {
 
     private String source;
 
+    @Column(onInsertValue = "0")
     private Long submissionNumber;
 
+    @Column(onInsertValue = "0")
     private Long acceptedNumber;
 
     private Integer createdById;
@@ -90,12 +93,14 @@ public class Problem implements Serializable {
     @Column(value = "_id")
     private String displayId;
 
-    private String statisticInfo;
+    @Column(onInsertValue = "'{}'", typeHandler = FastjsonTypeHandler.class)
+    private JSONObject statisticInfo;
 
     private Integer totalScore;
 
     private Integer contestId;
 
+    @Column(onInsertValue = "false")
     private Boolean isPublic;
 
     private Boolean spjCompileOk;
@@ -104,5 +109,6 @@ public class Problem implements Serializable {
     private JSONObject ioMode;
 
     private Boolean shareSubmission;
+
 
 }

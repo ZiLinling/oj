@@ -13,9 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = tokenExpiredException.class)
-    public Result errorHandlertoken(HttpServletRequest request, Exception ex) {
-        Result result = new Result();
+    public Result<String> errorHandlerToken(HttpServletRequest request, Exception ex) {
+        Result<String> result = new Result<>();
         result.error("Token Expired");
         return result;
     }
+
 }

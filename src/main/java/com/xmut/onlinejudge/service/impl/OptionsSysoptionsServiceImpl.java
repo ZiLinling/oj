@@ -18,8 +18,15 @@ import static com.xmut.onlinejudge.entity.table.OptionsSysoptionsTableDef.OPTION
 public class OptionsSysoptionsServiceImpl extends ServiceImpl<OptionsSysoptionsMapper, OptionsSysoptions> implements OptionsSysoptionsService {
 
     @Override
-    public OptionsSysoptions getValue(String key) {
-        return this.getOne(OPTIONS_SYSOPTIONS.KEY.eq(key));
+    public Object getValue(String key) {
+        OptionsSysoptions optionsSysoptions = this.getOne(OPTIONS_SYSOPTIONS.KEY.eq(key));
+        return optionsSysoptions.getValue();
     }
 
+    @Override
+    public void updateValue(String key, Object value) {
+        OptionsSysoptions option = new OptionsSysoptions();
+        option.setValue(value);
+        this.update(option, OPTIONS_SYSOPTIONS.KEY.eq(key));
+    }
 }

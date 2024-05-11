@@ -16,4 +16,6 @@ public interface SubmissionService extends IService<Submission> {
 
     Page<Submission> page(Integer pageNum, Integer pageSize, String username, Integer result, Integer userId);
 
+    Long countTodaySubmissions(String today);
+
 }

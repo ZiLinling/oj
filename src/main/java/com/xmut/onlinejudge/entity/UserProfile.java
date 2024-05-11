@@ -34,7 +34,7 @@ public class UserProfile implements Serializable {
     @Column(onInsertValue = "'{}'", typeHandler = FastjsonTypeHandler.class)
     private JSONObject acmProblemsStatus;
 
-    @Column(onInsertValue = "'default.png'")
+    @Column(onInsertValue = "/public/avatar/default.png")
     private String avatar;
 
     private String blog;
@@ -64,5 +64,10 @@ public class UserProfile implements Serializable {
     private String realName;
 
     private String language;
+
+    @Column(ignore = true)
+    private User user;
+
+    private String studentId;
 
 }

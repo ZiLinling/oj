@@ -22,17 +22,20 @@
             )
         </if>
         GROUP BY problem.id
+        ORDER BY problem.id ASC
         LIMIT #{pageSize} OFFSET #{pageOffset};
     </select>
 
     <select id="listForAdmin" resultType="com.mybatisflex.core.row.Row">
-        SELECT problem.*, string_agg(problem_tag.name, ',') AS tags, "user".username AS created_user
+        SELECT problem.*, string_agg(problem_tag.name, ',') AS tags, "user".username AS creator
         FROM problem
                  JOIN "user" ON problem.created_by_id = "user".id
                  LEFT JOIN problem_tags ON problem.id = problem_tags.problem_id
                  LEFT JOIN problem_tag ON problem_tags.problemtag_id = problem_tag.id
             ${qwSql}
-        GROUP BY problem.id, "user".username LIMIT #{pageSize}
+        GROUP BY problem.id, "user".username
+        ORDER BY problem.id ASC
+            LIMIT #{pageSize}
         OFFSET #{pageOffset};
     </select>
 
