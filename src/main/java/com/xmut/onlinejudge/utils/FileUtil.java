@@ -58,6 +58,10 @@ public class FileUtil {
         if (file.isEmpty()) {
             throw new RuntimeException("Uploaded file is empty");
         }
+        File dirFile = new File(dir);
+        if (!dirFile.exists()) {
+            dirFile.mkdirs();
+        }
         String fileName = UUID.randomUUID().toString().replace("-", "") + ".zip";
         File dest = new File(new File(dir).getAbsolutePath(), fileName);
         // Transfer the file to the destination path
