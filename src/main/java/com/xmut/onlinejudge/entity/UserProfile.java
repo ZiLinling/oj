@@ -1,10 +1,7 @@
 package com.xmut.onlinejudge.entity;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mybatisflex.annotation.Column;
-import com.mybatisflex.annotation.Id;
-import com.mybatisflex.annotation.KeyType;
-import com.mybatisflex.annotation.Table;
+import com.mybatisflex.annotation.*;
 import com.mybatisflex.core.handler.FastjsonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,9 +62,17 @@ public class UserProfile implements Serializable {
 
     private String language;
 
-    @Column(ignore = true)
+    @RelationOneToOne(selfField = "userId", targetField = "id")
     private User user;
 
     private String studentId;
 
+    public void addScore(int score) {
+        this.totalScore += score;
+    }
+
+    public void addScore(int curScore, int lastScore) {
+        this.totalScore -= lastScore;
+        this.totalScore += curScore;
+    }
 }

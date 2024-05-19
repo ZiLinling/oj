@@ -23,7 +23,8 @@ import static com.xmut.onlinejudge.VO.table.ProblemWithTagsTableDef.PROBLEM_WITH
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> implements ProblemService {
 
     @Override
-    public Page<ProblemWithTags> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag, Boolean isAdmin) {
+    public Page<ProblemWithTags> page(Integer pageNum, Integer pageSize, String keyword, String difficulty, String tag,
+                                      Integer contestId, String ruleType, Boolean isAdmin) {
         QueryWrapper queryWrapper = new QueryWrapper();
         if (keyword != null && !keyword.equals("")) {
             queryWrapper.and(PROBLEM_WITH_TAGS.TITLE.like("%" + keyword + "%"))
@@ -35,20 +36,35 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
         if (tag != null && !tag.equals("")) {
             queryWrapper.and(PROBLEM_WITH_TAGS.TAGS.like("%\"" + tag + "\"%"));
         }
+        if (ruleType != null && !ruleType.equals("")) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.RULE_TYPE.eq(ruleType));
+        }
+        if (contestId != null) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.CONTEST_ID.eq(contestId));
+        } else {
+            queryWrapper.and(PROBLEM_WITH_TAGS.CONTEST_ID.isNull());
+        }
         if (!isAdmin) {
             queryWrapper.and(PROBLEM_WITH_TAGS.VISIBLE.eq(true));
+            queryWrapper.orderBy(PROBLEM_WITH_TAGS.DISPLAY_ID, true);
+        } else {
+            queryWrapper.orderBy(PROBLEM_WITH_TAGS.ID, true);
         }
-        queryWrapper.orderBy(PROBLEM_WITH_TAGS.ID, true);
         queryWrapper.from(PROBLEM_WITH_TAGS);
         return this.mapper.paginateAs(pageNum, pageSize, queryWrapper, ProblemWithTags.class);
 
     }
 
     @Override
-    public ProblemWithTags getByDisplayId(String displayId, Boolean isAdmin) {
+    public ProblemWithTags getByDisplayId(String displayId, Integer contestId, Boolean isAdmin) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.where(PROBLEM_WITH_TAGS.DISPLAY_ID.eq(displayId));
         queryWrapper.from(PROBLEM_WITH_TAGS);
+        if (contestId != null) {
+            queryWrapper.and(PROBLEM_WITH_TAGS.CONTEST_ID.eq(contestId));
+        } else {
+            queryWrapper.and(PROBLEM_WITH_TAGS.CONTEST_ID.isNull());
+        }
         if (!isAdmin) {
             queryWrapper.and(PROBLEM_WITH_TAGS.VISIBLE.eq(true));
         }

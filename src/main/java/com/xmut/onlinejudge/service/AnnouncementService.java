@@ -12,5 +12,5 @@ import com.xmut.onlinejudge.entity.Announcement;
  */
 public interface AnnouncementService extends IService<Announcement> {
 
-    Page<Announcement> page(Integer pageNum, Integer pageSize, Boolean All);
+    Page<Announcement> page(Integer pageNum, Integer pageSize, Integer contestId, Boolean isAdmin);
 }

@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.controller;
 
+import com.mybatisflex.core.paginate.Page;
 import com.xmut.onlinejudge.base.Result;
 import com.xmut.onlinejudge.entity.User;
 import com.xmut.onlinejudge.entity.UserProfile;
@@ -125,4 +126,13 @@ public class UserProfileController {
         }
         return result;
     }
+
+    @GetMapping("user_rank")
+    public Result<Page<UserProfile>> getRank(Integer limit, Integer page, String rule) {
+        Result<Page<UserProfile>> result = new Result<>();
+        Page<UserProfile> userProfilePage = userProfileService.page(page, limit, rule);
+        result.success(userProfilePage, "查询成功");
+        return result;
+    }
+
 }

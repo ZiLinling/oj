@@ -100,7 +100,6 @@ public class Problem implements Serializable {
 
     private Integer contestId;
 
-    @Column(onInsertValue = "false")
     private Boolean isPublic;
 
     private Boolean spjCompileOk;

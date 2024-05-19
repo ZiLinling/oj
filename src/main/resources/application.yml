@@ -47,7 +47,7 @@ server:
 files:
   upload:
     testCase:
-      path: data/public/testCase/
+      path: data/testCase/
     avatar:
       path: data/public/avatar/
 

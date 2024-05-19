@@ -474,6 +474,53 @@ public class RedisUtil {
         }
     }
 
+    public Object lPop(String key) {
+        try {
+            return redisTemplate.opsForList().leftPop(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public Object rPop(String key) {
+        try {
+            return redisTemplate.opsForList().rightPop(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public Boolean lPush(String key, Object value) {
+        try {
+            redisTemplate.opsForList().leftPush(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public Boolean rPush(String key, Object value) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public long llen(String key) {
+        try {
+            return redisTemplate.opsForList().size(key);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     /**
      * 将值 value 插入键为 key 的 list 中，并设置时间
      *

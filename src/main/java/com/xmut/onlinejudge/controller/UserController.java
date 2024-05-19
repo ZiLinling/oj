@@ -71,9 +71,9 @@ public class UserController {
             if (getter.getPassword().equals(user.getPassword())) {
                 if (getter.getIsDisabled()) {
                     result.error("你的账号已被禁用");
+                } else {
+                    result.success(JwtUtil.generateToken(getter), "登录成功");
                 }
-                //更新最后登录时间
-                result.success(JwtUtil.generateToken(getter), "登录成功");
             } else {
                 result.error("密码错误");
             }
@@ -99,7 +99,6 @@ public class UserController {
 
     @PostMapping("register")
     public Result<User> register(@RequestBody String data) {
-        System.out.println(data);
         Result<User> result = new Result<User>();
         //将data中的user提取出来
         User user = JSON.parseObject(data, User.class);
@@ -286,4 +285,6 @@ public class UserController {
         headers.setContentDispositionFormData("attachment", "users.xlsx");
         return new ResponseEntity<>(raw_data, headers, HttpStatus.OK);
     }
+
+
 }

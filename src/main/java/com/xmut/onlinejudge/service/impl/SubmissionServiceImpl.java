@@ -28,9 +28,12 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
     }
 
     @Override
-    public Page<Submission> page(Integer pageNum, Integer pageSize, String username, Integer result, Integer userId) {
+    public Page<Submission> page(Integer pageNum, Integer pageSize, Integer contestId, String username, Integer result, Integer userId, Integer problemId) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.select(SUBMISSION.ALL_COLUMNS, PROBLEM.DISPLAY_ID.as("problemDisplayId")).from(SUBMISSION).join(PROBLEM).on(SUBMISSION.PROBLEM_ID.eq(PROBLEM.ID));
+        if (problemId != null) {
+            queryWrapper.and(SUBMISSION.PROBLEM_ID.eq(problemId));
+        }
         if (username != null && !username.equals("")) {
             queryWrapper.and(SUBMISSION.USERNAME.like("%" + username + "%"));
         }
@@ -39,6 +42,11 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
         }
         if (userId != null) {
             queryWrapper.and(SUBMISSION.USER_ID.eq(userId));
+        }
+        if (contestId != null) {
+            queryWrapper.and(SUBMISSION.CONTEST_ID.eq(contestId));
+        } else {
+            queryWrapper.and(SUBMISSION.CONTEST_ID.isNull());
         }
         queryWrapper.orderBy("create_time", false);
         return this.mapper.paginate(Page.of(pageNum, pageSize), queryWrapper);

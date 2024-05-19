@@ -29,6 +29,7 @@ public class User implements Serializable {
     @Id(keyType = KeyType.Auto)
     private Integer id;
 
+    @Column(isLarge = true)
     private String password;
 
     private String lastLogin;

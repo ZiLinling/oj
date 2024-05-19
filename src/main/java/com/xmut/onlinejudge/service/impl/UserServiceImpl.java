@@ -22,7 +22,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     public User getByUsernameWithoutPassword(String username) {
         QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.select(USER.ID, USER.USERNAME, USER.EMAIL, USER.ADMIN_TYPE, USER.IS_DISABLED, USER.CREATE_TIME);
         queryWrapper.where(USER.USERNAME.eq(username));
         return this.mapper.selectOneByQuery(queryWrapper);
     }
@@ -51,6 +50,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     public User getByUsernameWithPassword(String username) {
         QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.select(USER.ALL_COLUMNS);
         queryWrapper.where(USER.USERNAME.eq(username));
         return this.mapper.selectOneByQuery(queryWrapper);
     }

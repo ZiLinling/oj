@@ -14,7 +14,7 @@ public interface SubmissionService extends IService<Submission> {
 
     Boolean isExist(Integer problemId, Integer userId);
 
-    Page<Submission> page(Integer pageNum, Integer pageSize, String username, Integer result, Integer userId);
+    Page<Submission> page(Integer pageNum, Integer pageSize, Integer contestId, String username, Integer result, Integer userId, Integer problemId);
 
     Long countTodaySubmissions(String today);
 

@@ -1,5 +1,6 @@
 package com.xmut.onlinejudge.service;
 
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import com.xmut.onlinejudge.entity.UserProfile;
 
@@ -12,6 +13,8 @@ import com.xmut.onlinejudge.entity.UserProfile;
 public interface UserProfileService extends IService<UserProfile> {
 
     UserProfile getByUserId(Integer userId);
+
+    Page<UserProfile> page(Integer pageNum, Integer pageSize, String rule);
 
     void removeByUserId(Integer userId);
 

@@ -21,11 +21,16 @@ import static com.xmut.onlinejudge.entity.table.UserTableDef.USER;
 public class AnnouncementServiceImpl extends ServiceImpl<AnnouncementMapper, Announcement> implements AnnouncementService {
 
     @Override
-    public Page<Announcement> page(Integer pageNum, Integer pageSize, Boolean All) {
+    public Page<Announcement> page(Integer pageNum, Integer pageSize, Integer contestId, Boolean isAdmin) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.select(ANNOUNCEMENT.ALL_COLUMNS, USER.USERNAME.as("creator")).from(ANNOUNCEMENT).orderBy("create_time", false).join(USER).on(ANNOUNCEMENT.CREATED_BY_ID.eq(USER.ID));
-        if (!All) {
+        if (!isAdmin) {
             queryWrapper.where(ANNOUNCEMENT.VISIBLE.eq(true));
+        }
+        if (contestId != null) {
+            queryWrapper.and(ANNOUNCEMENT.CONTEST_ID.eq(contestId));
+        } else {
+            queryWrapper.and(ANNOUNCEMENT.CONTEST_ID.isNull());
         }
         return this.mapper.paginate(pageNum, pageSize, queryWrapper);
     }

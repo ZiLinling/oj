@@ -26,24 +26,29 @@ public class AnnouncementController {
     @Autowired
     private HttpServletRequest request;
 
-
     @GetMapping("admin/list")
-    public Result<Page<Announcement>> pageForAdmin(Integer page, Integer limit) {
+    public Result<Page<Announcement>> pageForAdmin(Integer page, Integer limit, Integer contestId) {
         Result<Page<Announcement>> result = new Result<>();
-        Page<Announcement> announcementPage = announcementService.page(page, limit, true);
+        Page<Announcement> announcementPage = announcementService.page(page, limit, contestId, true);
         result.success(announcementPage, "查询成功");
         return result;
     }
 
     @GetMapping("list")
-    public Result<Page<Announcement>> pageForUser(Integer page, Integer limit) {
+    public Result<Page<Announcement>> pageForUser(Integer page, Integer limit, Integer contestId) {
         Result<Page<Announcement>> result = new Result<>();
-        Page<Announcement> announcementPage = announcementService.page(page, limit, false);
+        if (page == null) {
+            page = 1;
+        }
+        if (limit == null) {
+            limit = 1000;
+        }
+        Page<Announcement> announcementPage = announcementService.page(page, limit, contestId, false);
         result.success(announcementPage, "查询成功");
         return result;
     }
 
-    @PostMapping("")
+    @PostMapping("admin/save")
     public Result<Announcement> save(@RequestBody Announcement announcement) {
         Result<Announcement> result = new Result<>();
         String token = request.getHeader("token");
@@ -57,7 +62,7 @@ public class AnnouncementController {
         return result;
     }
 
-    @PutMapping("")
+    @PutMapping("admin/update")
     public Result<Announcement> updateById(@RequestBody Announcement announcement) {
         Result<Announcement> result = new Result<>();
         if (announcementService.updateById(announcement)) {
@@ -68,7 +73,7 @@ public class AnnouncementController {
         return result;
     }
 
-    @DeleteMapping("")
+    @DeleteMapping("admin/delete")
     public Result<Announcement> removeById(Integer id) {
         Result<Announcement> result = new Result<>();
         if (announcementService.removeById(id)) {

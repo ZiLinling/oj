@@ -16,6 +16,7 @@ import com.xmut.onlinejudge.service.ProblemTagsService;
 import com.xmut.onlinejudge.service.UserProfileService;
 import com.xmut.onlinejudge.utils.FileUtil;
 import com.xmut.onlinejudge.utils.JwtUtil;
+import com.xmut.onlinejudge.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -60,21 +61,24 @@ public class ProblemController {
     @Autowired
     private HttpServletRequest request;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @Value("${files.upload.testCase.path}")
     private String TEST_CASES_DIR;
 
 
-    @GetMapping("")
-    public Result<Problem> getByDisplayId(String displayId) {
+    @GetMapping("get")
+    public Result<Problem> getByDisplayId(String displayId, Integer contestId) {
         Result<Problem> result = new Result<>();
-        ProblemWithTags problem = problemService.getByDisplayId(displayId, false);
-        if (JwtUtil.verifyToken(request.getHeader("token"))) {
-            List<ProblemWithTags> problems = new ArrayList<>();
-            problems.add(problem);
-            problems = addProblemStatus(problems);
-            problem = problems.get(0);
-        }
+        ProblemWithTags problem = problemService.getByDisplayId(displayId, contestId, false);
         if (problem != null) {
+            if (JwtUtil.verifyToken(request.getHeader("token"))) {
+                List<ProblemWithTags> problems = new ArrayList<>();
+                problems.add(problem);
+                problems = addProblemStatus(problems);
+                problem = problems.get(0);
+            }
             result.success(problem, "查询成功");
         } else {
             result.error("该问题不存在");
@@ -82,7 +86,7 @@ public class ProblemController {
         return result;
     }
 
-    @GetMapping("/admin")
+    @GetMapping("admin/get")
     public Result<ProblemWithTags> getById(Integer id) {
         Result<ProblemWithTags> result = new Result<>();
         ProblemWithTags problem = problemService.getById(id);
@@ -94,22 +98,33 @@ public class ProblemController {
         return result;
     }
 
-    @PutMapping("/admin")
+    @PutMapping("admin/update")
     public Result<ProblemWithTags> updateById(@RequestBody ProblemWithTags problem) {
         Result<ProblemWithTags> result = new Result<>();
-        ProblemWithTags getter = problemService.getByDisplayId(problem.getDisplayId(), true);
-        if (Objects.equals(getter.getId(), problem.getId())) {
+        ProblemWithTags getter = problemService.getByDisplayId(problem.getDisplayId(), problem.getContestId(), true);
+        if (getter != null && !(Objects.equals(getter.getId(), problem.getId()))) {
+            result.error("显示ID重复,请修改");
+        } else {
             List<String> tags = problem.getTags();
             problemService.updateById(problem);
+            redisUtil.del("problem_cache");
             updateTags(tags, problem.getId());
             result.success(null, "更新成功");
-        } else {
-            result.error("显示ID重复,请修改");
         }
         return result;
     }
 
-    @PostMapping("/admin")
+    @DeleteMapping("admin/delete")
+    public Result<ProblemWithTags> removeById(Integer id) {
+        Result<ProblemWithTags> result = new Result<>();
+        problemService.removeById(id);
+        redisUtil.del("problem_cache");
+        result.success(null, "删除成功");
+        return result;
+    }
+
+
+    @PostMapping("admin/save")
     public Result<ProblemWithTags> save(@RequestBody ProblemWithTags problem, @RequestHeader("token") String token) {
         Result<ProblemWithTags> result = new Result<>();
         problem.setCreatedById(JwtUtil.getUserId(token));
@@ -119,21 +134,20 @@ public class ProblemController {
             totalScore += testCaseScore.getJSONObject(i).getInteger("score");
         }
         problem.setTotalScore(totalScore);
-        ProblemWithTags getter = problemService.getByDisplayId(problem.getDisplayId(), true);
+        ProblemWithTags getter = problemService.getByDisplayId(problem.getDisplayId(), problem.getContestId(), true);
         if (getter != null) {
             if (Objects.equals(getter.getId(), problem.getId())) {
                 result.error("显示ID重复,请修改");
             }
         } else {
-            System.out.println(problem.getId());
             List<String> tags = problem.getTags();
             problemService.save(problem);
             updateTags(tags, problem.getId());
+            redisUtil.del("problem_cache");
             result.success(null, "新增成功");
         }
         return result;
     }
-
 
     public void updateTags(List<String> tags, Integer problemId) {
         //删除tags表中problemId对应的数据
@@ -177,9 +191,24 @@ public class ProblemController {
 
 
     @GetMapping("list")
-    public Result<Page<ProblemWithTags>> pageForUser(Integer limit, Integer page, String keyword, String difficulty, String tag) {
+    public Result<Page<ProblemWithTags>> pageForUser(Integer limit, Integer page, String keyword, String difficulty, Integer contestId, String tag) {
         Result<Page<ProblemWithTags>> result = new Result<>();
-        Page<ProblemWithTags> problemPage = problemService.page(page, limit, keyword, difficulty, tag, false);
+        if (page == null) {
+            page = 1;
+        }
+        if (limit == null) {
+            limit = 1000;
+        }
+        Page<ProblemWithTags> problemPage;
+        if (tag != null || contestId != null) {
+            problemPage = problemService.page(page, limit, keyword, difficulty, tag, contestId, null, false);
+        } else {
+            problemPage = (Page<ProblemWithTags>) redisUtil.hget("problem_cache", String.valueOf(page));
+            if (problemPage == null) {
+                problemPage = problemService.page(page, limit, keyword, difficulty, tag, contestId, null, false);
+                redisUtil.hset("problem_cache", String.valueOf(page), problemPage);
+            }
+        }
         List<ProblemWithTags> records = problemPage.getRecords();
         if (JwtUtil.verifyToken(request.getHeader("token"))) {
             records = addProblemStatus(records);
@@ -190,14 +219,9 @@ public class ProblemController {
     }
 
     @GetMapping("admin/list")
-    public Result<Page<ProblemWithTags>> pageForAdmin(Integer limit, Integer page, String keyword, String difficulty, String tag) {
+    public Result<Page<ProblemWithTags>> pageForAdmin(Integer limit, Integer page, String keyword, String difficulty, Integer contestId, String ruleType, String tag) {
         Result<Page<ProblemWithTags>> result = new Result<>();
-        Page<ProblemWithTags> problemPage = problemService.page(page, limit, keyword, difficulty, tag, true);
-        List<ProblemWithTags> records = problemPage.getRecords();
-        if (JwtUtil.verifyToken(request.getHeader("token"))) {
-            records = addProblemStatus(records);
-            problemPage.setRecords(records);
-        }
+        Page<ProblemWithTags> problemPage = problemService.page(page, limit, keyword, difficulty, tag, contestId, ruleType, true);
         result.success(problemPage, "查询成功");
         return result;
     }
@@ -231,5 +255,54 @@ public class ProblemController {
                 .headers(headers)
                 .body(rawData);
     }
+
+    @PostMapping("contest/add_problem_from_public")
+    public Result<ProblemWithTags> addProblemFromPublic(@RequestBody ProblemWithTags data) {
+        Result<ProblemWithTags> result = new Result<>();
+        ProblemWithTags problem = problemService.getById(data.getId());
+        ProblemWithTags getter = problemService.getByDisplayId(data.getDisplayId(), data.getContestId(), true);
+        if (getter != null) {
+            result.error("显示ID重复,请修改");
+            return result;
+        }
+        if (problem != null) {
+            problem.setContestId(data.getContestId());
+            problem.setDisplayId(data.getDisplayId());
+            problem.setId(null);
+            problemService.save(problem);
+            result.success(null, "添加成功");
+        } else {
+            result.error("该问题不存在");
+        }
+        return result;
+    }
+
+    @PostMapping("contest/make_public")
+    public Result<ProblemWithTags> makePublic(@RequestBody ProblemWithTags data) {
+        Result<ProblemWithTags> result = new Result<>();
+        ProblemWithTags problem = problemService.getById(data.getId());
+        if (problem != null) {
+            if (problem.getIsPublic()) {
+                result.error("该问题已经是公开的");
+                return result;
+            }
+            ProblemWithTags getter = problemService.getByDisplayId(data.getDisplayId(), null, true);
+            if (getter != null) {
+                result.error("显示ID重复,请修改");
+                return result;
+            }
+            problem.setIsPublic(true);
+            problemService.updateById(problem);
+            problem.setId(null);
+            problem.setContestId(null);
+            problem.setDisplayId(data.getDisplayId());
+            problemService.save(problem);
+            result.success(null, "添加成功");
+        } else {
+            result.error("该问题不存在");
+        }
+        return result;
+    }
+
 
 }

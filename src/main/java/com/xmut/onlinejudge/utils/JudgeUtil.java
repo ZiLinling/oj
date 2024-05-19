@@ -4,10 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.xmut.onlinejudge.entity.Problem;
-import com.xmut.onlinejudge.entity.Submission;
-import com.xmut.onlinejudge.service.OptionsSysoptionsService;
-import com.xmut.onlinejudge.service.SubmissionService;
+import com.xmut.onlinejudge.entity.*;
+import com.xmut.onlinejudge.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +29,25 @@ public class JudgeUtil {
     @Autowired
     private OptionsSysoptionsService optionsSysoptionsService;
 
+    @Autowired
+    private ProblemService problemService;
+
+    @Autowired
+    private UserProfileService userProfileService;
+
+    @Autowired
+    private ContestService contestService;
+
+
+    @Autowired
+    private SubmissionService submissionService;
+
+    @Autowired
+    private AcmContestRankService acmContestRankService;
+
+    @Autowired
+    private OiContestRankService oiContestRankService;
+
     public static final int COMPILE_ERROR = -2;
 
     private static String token = "TOKEN";
@@ -45,8 +62,7 @@ public class JudgeUtil {
     public static final int PENDING = 6;
     public static final int JUDGING = 7;
     public static final int PARTIALLY_ACCEPTED = 8;
-    @Autowired
-    private SubmissionService submissionService;
+
 
     JudgeUtil() {
         System.setProperty("http.proxySet", "true");
@@ -72,39 +88,6 @@ public class JudgeUtil {
         }
     }
 
-    public static String request(String url, String data) {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("X-Judge-Server-Token", sha256(token));
-        //创建请求体
-        HttpEntity<String> entity = new HttpEntity<>(data, headers);
-        //发送请求
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, entity, String.class);
-        JSONObject result = JSON.parseObject(responseEntity.getBody());
-        System.out.println(result);
-        System.out.println(responseEntity.getBody());
-        return result.getString("data");
-    }
-
-    //    public static JudgeServer ping(String url) {
-//        String response=request(url,null);
-//        System.out.println(response);
-//        JSONObject result = JSON.parseObject(response);
-//        JSONObject data = JSON.parseObject(result.getString("data"));
-//        JudgeServer judgeServer = new JudgeServer(data);
-//        judgeServer.setServiceUrl(url);
-//        System.out.println(judgeServer);
-//        return judgeServer;
-//    }
-
-    public static void main(String[] argc) throws JsonProcessingException {
-        JudgeUtil judgeUtil = new JudgeUtil();
-        Submission submission = new Submission();
-//        judgeUtil.handleJudgeTask(submission);
-//        judgeService.ping ("http://192.168.214.134:808/ping");
-    }
-
     public JSONObject getLanguageConfig(String language) {
         JSONArray data;
         if (redisUtil.hasKey("languages")) {
@@ -125,16 +108,18 @@ public class JudgeUtil {
     }
 
     @Async
-    public void judge(Submission submission, Problem problem) throws JsonProcessingException {
+    public void judge() throws JsonProcessingException {
         // 处理判题任务的逻辑，包括编译、运行等步骤
         // 通过异步队列或者消息队列发送判题任务
         // 可以在这里调用判题服务的接口或者方法
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "8888");
-        System.setProperty("https.proxyPort", "8888");
+        if (redisUtil.llen("task_queue") == 0) {
+            return;
+        }
+        JSONObject task = (JSONObject) redisUtil.rPop("task_queue");
+        Submission submission = (Submission) task.get("submission");
+        Problem problem = (Problem) task.get("problem");
 
-        String judgeUrl = "http://192.168.214.134:8080/judge";
+        String judgeUrl = "http://localhost:7777/judge";
         //向判题服务器发送post请求
         RestTemplate restTemplate = new RestTemplate();
 
@@ -184,6 +169,14 @@ public class JudgeUtil {
             }
         }
         submissionService.saveOrUpdate(submission);
+        update_problem_status(submission, problem);
+        if (submission.getContestId() != null) {
+            Contest contest = contestService.getById(submission.getContestId());
+            update_contest_rank(submission, problem, contest);
+        } else {
+            update_userprofile(submission, problem);
+        }
+        judge();
     }
 
     private void computeStatisticInfo(Submission submission, JSONArray testData, Problem problem) {
@@ -212,5 +205,153 @@ public class JudgeUtil {
         }
         submission.setStatisticInfo(staticInfo);
     }
+
+    private void update_problem_status(Submission submission, Problem problem) {
+        int result = submission.getResult();
+        problem.setSubmissionNumber(problem.getSubmissionNumber() + 1);
+        if (submission.getResult() == ACCEPTED) {
+            problem.setAcceptedNumber(problem.getAcceptedNumber() + 1);
+        }
+        JSONObject problemInfo = problem.getStatisticInfo();
+        problemInfo.put(String.valueOf(result), problemInfo.getIntValue(String.valueOf(result)) + 1);
+        problem.setStatisticInfo(problemInfo);
+        problemService.updateById(problem);
+    }
+
+    private void update_userprofile(Submission submission, Problem problem) {
+        // update_userprofile
+        UserProfile userProfile = userProfileService.getByUserId(submission.getUserId());
+        userProfile.setSubmissionNumber(userProfile.getSubmissionNumber() + 1);
+        if (problem.getRuleType().equals("ACM")) {
+            JSONObject acmProblemsStatus = userProfile.getAcmProblemsStatus();
+            if (!acmProblemsStatus.containsKey(String.valueOf(problem.getId()))) {
+                acmProblemsStatus.put(String.valueOf(problem.getId()), new JSONObject());
+                acmProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("status", submission.getResult());
+                acmProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("displayId", problem.getDisplayId());
+                if (submission.getResult() == ACCEPTED) {
+                    userProfile.setAcceptedNumber(userProfile.getAcceptedNumber() + 1);
+                }
+            } else {
+                if (acmProblemsStatus.getJSONObject(String.valueOf(problem.getId())).getIntValue("status") != ACCEPTED) {
+                    acmProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("status", submission.getResult());
+                    if (submission.getResult() == ACCEPTED) {
+                        userProfile.setAcceptedNumber(userProfile.getAcceptedNumber() + 1);
+                    }
+                }
+            }
+            userProfile.setAcmProblemsStatus(acmProblemsStatus);
+        } else {
+            JSONObject oiProblemsStatus = userProfile.getOiProblemsStatus();
+            int score = submission.getStatisticInfo().getIntValue("score");
+            if (!oiProblemsStatus.containsKey(String.valueOf(problem.getId()))) {
+                userProfile.addScore(score);
+                oiProblemsStatus.put(String.valueOf(problem.getId()), new JSONObject());
+                oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("status", submission.getResult());
+                oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("displayId", problem.getDisplayId());
+                oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("score", score);
+                if (submission.getResult() == ACCEPTED) {
+                    userProfile.setAcceptedNumber(userProfile.getAcceptedNumber() + 1);
+                }
+            } else {
+                if (oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).getIntValue("status") != ACCEPTED) {
+                    userProfile.addScore(score, oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).getIntValue("score"));
+                    oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("score", score);
+                    oiProblemsStatus.getJSONObject(String.valueOf(problem.getId())).put("status", submission.getResult());
+                    if (submission.getResult() == ACCEPTED) {
+                        userProfile.setAcceptedNumber(userProfile.getAcceptedNumber() + 1);
+                    }
+                }
+            }
+            userProfile.setOiProblemsStatus(oiProblemsStatus);
+        }
+        userProfileService.updateById(userProfile);
+    }
+
+    //        if self.contest.rule_type == ContestRuleType.OI or self.contest.real_time_rank:
+//            cache.delete(f"{CacheKey.contest_rank_cache}:{self.contest.id}")
+    private void update_contest_rank(Submission submission, Problem problem, Contest contest) {
+        if (contest.getRuleType().equals("OI") || contest.getRealTimeRank()) {
+            redisUtil.del("contest_rank_cache:" + contest.getId());
+        }
+        if (contest.getRuleType().equals("ACM")) {
+            AcmContestRank acmContestRank = acmContestRankService.getByUserIdAndContestId(submission.getUserId(), contest.getId());
+            if (acmContestRank == null) {
+                acmContestRank = new AcmContestRank(contest.getId(), submission.getUserId());
+                acmContestRankService.save(acmContestRank);
+            }
+            update_acm_contest_rank(submission, problem, contest, acmContestRank);
+        } else {
+            OiContestRank oiContestRank = oiContestRankService.getByUserIdAndContestId(submission.getUserId(), contest.getId());
+            if (oiContestRank == null) {
+                oiContestRank = new OiContestRank(contest.getId(), submission.getUserId());
+                oiContestRankService.save(oiContestRank);
+            }
+            update_oi_contest_rank(submission, problem, contest, oiContestRank);
+        }
+
+    }
+
+    private void update_acm_contest_rank(Submission submission, Problem problem, Contest contest, AcmContestRank acmContestRank) {
+        JSONObject submissionInfo = acmContestRank.getSubmissionInfo();
+        JSONObject info = submissionInfo.getJSONObject(String.valueOf(submission.getProblemId()));
+        if (info != null) {
+            if (info.getBoolean("is_ac")) {
+                return;
+            }
+            acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber() + 1);
+            if (submission.getResult() == ACCEPTED) {
+                acmContestRank.setAcceptedNumber(acmContestRank.getAcceptedNumber() + 1);
+                info.put("is_ac", true);
+                info.put("ac_time", DateUtil.getDiffSeconds(contest.getStartTime(), submission.getCreateTime()));
+                acmContestRank.setTotalTime(info.getIntValue("ac_time") + info.getIntValue("error_number") * 20 * 60);
+                if (problem.getAcceptedNumber() == 1) {
+                    info.put("is_first_ac", true);
+                }
+            } else if (submission.getResult() != COMPILE_ERROR) {
+                info.put("error_number", info.getIntValue("error_number") + 1);
+            }
+        } else {
+            acmContestRank.setSubmissionNumber(acmContestRank.getSubmissionNumber() + 1);
+            info = new JSONObject();
+            info.put("is_ac", false);
+            info.put("ac_time", 0);
+            info.put("error_number", 0);
+            info.put("is_first_ac", false);
+            if (submission.getResult() == ACCEPTED) {
+                acmContestRank.setAcceptedNumber(acmContestRank.getAcceptedNumber() + 1);
+                info.put("is_ac", true);
+                info.put("ac_time", DateUtil.getDiffSeconds(contest.getStartTime(), submission.getCreateTime()));
+                acmContestRank.setTotalTime(info.getIntValue("ac_time"));
+                if (problem.getAcceptedNumber() == 1) {
+                    info.put("is_first_ac", true);
+                }
+            } else if (submission.getResult() != COMPILE_ERROR) {
+                info.put("error_number", 1);
+            }
+        }
+        submissionInfo.put(String.valueOf(submission.getProblemId()), info);
+        acmContestRank.setSubmissionInfo(submissionInfo);
+        acmContestRankService.saveOrUpdate(acmContestRank);
+    }
+
+    private void update_oi_contest_rank(Submission submission, Problem problem, Contest contest, OiContestRank oiContestRank) {
+        String problemId = String.valueOf(submission.getProblemId());
+        int currentScore = submission.getStatisticInfo().getIntValue("score");
+        JSONObject info = oiContestRank.getSubmissionInfo();
+        if (currentScore < info.getIntValue(problemId)) {
+            return;
+        }
+        System.out.println(oiContestRank.getSubmissionInfo());
+        Integer lastScore = oiContestRank.getSubmissionInfo().getInteger(problemId);
+        if (lastScore != null) {
+            oiContestRank.setTotalScore(oiContestRank.getTotalScore() - lastScore + currentScore);
+        } else {
+            oiContestRank.setTotalScore(oiContestRank.getTotalScore() + currentScore);
+        }
+        oiContestRank.setSubmissionNumber(oiContestRank.getSubmissionNumber() + 1);
+        oiContestRank.getSubmissionInfo().put(problemId, currentScore);
+        oiContestRankService.saveOrUpdate(oiContestRank);
+    }
+
 
 }
